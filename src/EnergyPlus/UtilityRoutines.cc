@@ -745,6 +745,8 @@ void CloseOutOpenFiles()
     int ios;
 
     for (UnitNumber = 1; UnitNumber <= MaxUnitNumber; ++UnitNumber) {
+        if (UnitNumber == 6) continue;
+        if (UnitNumber == 101) continue;
         {
             IOFlags flags;
             ObjexxFCL::gio::inquire(UnitNumber, flags);
@@ -765,6 +767,7 @@ void CloseOutOpenFiles()
 int EndEnergyPlus()
 {
 
+  std::cout << "EndEnergyPlus" << std::endl;
     // SUBROUTINE INFORMATION:
     //       AUTHOR         Linda K. Lawrie
     //       DATE WRITTEN   December 1997
@@ -895,10 +898,13 @@ int EndEnergyPlus()
     epSummaryTimes(Time_Finish - Time_Start);
 #endif
     std::cerr << "EnergyPlus Completed Successfully." << std::endl;
-    CloseOutOpenFiles();
+    std::cout << "start CloseOutOpenFiles" << std::endl;
+    //CloseOutOpenFiles();
+    std::cout << "done CloseOutOpenFiles" << std::endl;
     // Close the ExternalInterface socket. This call also sends the flag "1" to the ExternalInterface,
     // indicating that E+ finished its simulation
     if ((NumExternalInterfaces > 0) && haveExternalInterfaceBCVTB) CloseSocket(1);
+    std::cout << "done done" << std::endl;
     return EXIT_SUCCESS;
 }
 

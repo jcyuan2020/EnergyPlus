@@ -1,3 +1,5 @@
+import PySAM.Windpower as Windpower
+
 from collections import deque
 
 from pyenergyplus.plugin import EnergyPlusPlugin
@@ -14,6 +16,10 @@ class CalculateAverageTrend(EnergyPlusPlugin):
         self.trend_avg_var_handle = None
         self.last_five_avg_temps = deque(maxlen=5)
 
+        # PySAM
+        self.pysam_var_handle = None
+        self.system_model = Windpower.default("WindPowerSingleOwner")
+
     def on_end_of_zone_timestep_before_zone_reporting(self):
         if self.one_time:
             zone_names = ["perimeter_zn_" + str(i) for i in range(1, 5)] + ["core_zn"]
@@ -24,7 +30,12 @@ class CalculateAverageTrend(EnergyPlusPlugin):
                 self.t_handles.append(self.api.exchange.get_variable_handle("Zone Mean Air Temperature", zone_name))
             self.avg_temp_variable_handle = self.api.exchange.get_global_handle("AverageBuildingTemp")
             self.trend_avg_var_handle = self.api.exchange.get_global_handle("TrendAverageTemp")
+
+            # setup PySAM handle
+            self.pysam_var_handle = self.api.exchange.get_global_handle("PySAMTurbHubHeight")
+
             self.one_time = False
+
         zone_temps = list()
         for t_handle in self.t_handles:
             zone_temps.append(self.api.exchange.get_variable_value(t_handle))
@@ -38,4 +49,8 @@ class CalculateAverageTrend(EnergyPlusPlugin):
         self.last_five_avg_temps.append(average_temp)
         trend_average = sum(self.last_five_avg_temps) / len(self.last_five_avg_temps)
         self.api.exchange.set_global_value(self.trend_avg_var_handle, trend_average)
+
+        # set PySAM custom output var
+        self.api.exchange.set_global_value(self.pysam_var_handle, self.system_model.Turbine.wind_turbine_hub_ht)
+
         return 0

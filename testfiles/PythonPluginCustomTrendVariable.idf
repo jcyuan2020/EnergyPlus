@@ -6119,7 +6119,20 @@
   PythonPlugin:Variables,
     MyGlobalVariables,       !- Name
     AverageBuildingTemp,     !- Variable Name 1
-    TrendAverageTemp;        !- Variable Name 2
+    TrendAverageTemp,        !- Variable Name 2
+    PySAMTurbHubHeight;      !- Variable Name 3
+
+  PythonPlugin:OutputVariable,
+    Turbine Hub Height,      !- Name
+    PySAMTurbHubHeight,      !- PythonPlugin:Variable Name
+    Averaged,                !- Type of Data in Variable
+    ZoneTimestep,            !- Update Frequency
+    m;                       !- Units
+
+  Output:Variable,
+    Turbine Hub Height,
+    PythonPlugin:OutputVariable,
+    Timestep;
 
   PythonPlugin:OutputVariable,
     Averaged Building Temperature,  !- Name

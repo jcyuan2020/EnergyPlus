@@ -609,8 +609,6 @@ TEST_F(EnergyPlusFixture, SpectralAngularPropertyTest)
 
         "  HeatBalanceAlgorithm,ConductionTransferFunction;",
 
-        "  Output:DebuggingData,0,0;",
-
         "  ZoneCapacitanceMultiplier:ResearchSpecial,",
         "    Multiplier,              !- Name",
         "    ,                        !- Zone or ZoneList Name",

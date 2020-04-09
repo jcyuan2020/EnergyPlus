@@ -615,8 +615,8 @@ namespace HeatBalanceIntRadExchange {
             if (CarrollMethod) {
 
                 // User View Factors cannot be used with Carroll method.
-                if(inputProcessor->getNumObjectsFound("ZoneProperty:UserViewFactors:bySurfaceName")) {
-                    ShowWarningError("ZoneProperty:UserViewFactors:bySurfaceName objects have been defined, however View");
+                if(inputProcessor->getNumObjectsFound("ZoneProperty:UserViewFactors:BySurfaceName")) {
+                    ShowWarningError("ZoneProperty:UserViewFactors:BySurfaceName objects have been defined, however View");
                     ShowContinueError("  Factors are not used when Zone Radiant Exchange Algorithm is set to CarrollMRT.");
                 }
                 CalcFMRT(thisEnclosure.NumOfSurfaces, thisEnclosure.Area, thisEnclosure.FMRT);
@@ -626,7 +626,7 @@ namespace HeatBalanceIntRadExchange {
 
                 NoUserInputF = true;
 
-                std::string cCurrentModuleObject = "ZoneProperty:UserViewFactors:bySurfaceName";
+                std::string cCurrentModuleObject = "ZoneProperty:UserViewFactors:BySurfaceName";
                 int NumZonesWithUserFbyS = inputProcessor->getNumObjectsFound(cCurrentModuleObject);
                 if (NumZonesWithUserFbyS > 0) {
 
@@ -733,7 +733,7 @@ namespace HeatBalanceIntRadExchange {
 
                     if (Option1 == "IDF") {
                         ObjexxFCL::gio::write(OutputFileDebug, fmtA) << "!======== original input factors ===========================";
-                        ObjexxFCL::gio::write(OutputFileDebug, fmtA) << "ZoneProperty:UserViewFactors:bySurfaceName," + thisEnclosure.Name + ',';
+                        ObjexxFCL::gio::write(OutputFileDebug, fmtA) << "ZoneProperty:UserViewFactors:BySurfaceName," + thisEnclosure.Name + ',';
                         for (int SurfNum = 1; SurfNum <= thisEnclosure.NumOfSurfaces; ++SurfNum) {
                             for (Findex = 1; Findex <= thisEnclosure.NumOfSurfaces; ++Findex) {
                                 if (!(SurfNum == thisEnclosure.NumOfSurfaces && Findex == thisEnclosure.NumOfSurfaces)) {
@@ -750,7 +750,7 @@ namespace HeatBalanceIntRadExchange {
                         ObjexxFCL::gio::write(OutputFileDebug, fmtA) << "!============= end of data ======================";
 
                         ObjexxFCL::gio::write(OutputFileDebug, fmtA) << "!============ final view factors =======================";
-                        ObjexxFCL::gio::write(OutputFileDebug, fmtA) << "ZoneProperty:UserViewFactors:bySurfaceName," + thisEnclosure.Name + ',';
+                        ObjexxFCL::gio::write(OutputFileDebug, fmtA) << "ZoneProperty:UserViewFactors:BySurfaceName," + thisEnclosure.Name + ',';
                         for (int SurfNum = 1; SurfNum <= thisEnclosure.NumOfSurfaces; ++SurfNum) {
                             for (Findex = 1; Findex <= thisEnclosure.NumOfSurfaces; ++Findex) {
                                 if (!(SurfNum == thisEnclosure.NumOfSurfaces && Findex == thisEnclosure.NumOfSurfaces)) {
@@ -833,7 +833,7 @@ namespace HeatBalanceIntRadExchange {
             print(outputFiles.eio, "{}\n", "! <Solar View Factor>,Surface Name,Surface Class,Row Sum,View Factors for each Surface");
         }
 
-        std::string cCurrentModuleObject = "ZoneProperty:UserViewFactors:bySurfaceName";
+        std::string cCurrentModuleObject = "ZoneProperty:UserViewFactors:BySurfaceName";
         int NumZonesWithUserFbyS = inputProcessor->getNumObjectsFound(cCurrentModuleObject);
         if (NumZonesWithUserFbyS > 0) AlignInputViewFactors(cCurrentModuleObject, ErrorsFound);
 
@@ -1017,7 +1017,7 @@ namespace HeatBalanceIntRadExchange {
 
                 if (Option1 == "IDF") {
                     ObjexxFCL::gio::write(OutputFileDebug, fmtA) << "!======== original input factors ===========================";
-                    ObjexxFCL::gio::write(OutputFileDebug, fmtA) << "ZoneProperty:UserViewFactors:bySurfaceName," + thisEnclosure.Name + ',';
+                    ObjexxFCL::gio::write(OutputFileDebug, fmtA) << "ZoneProperty:UserViewFactors:BySurfaceName," + thisEnclosure.Name + ',';
                     for (int SurfNum = 1; SurfNum <= thisEnclosure.NumOfSurfaces; ++SurfNum) {
                         for (int Findex = 1; Findex <= thisEnclosure.NumOfSurfaces; ++Findex) {
                             if (!(SurfNum == thisEnclosure.NumOfSurfaces && Findex == thisEnclosure.NumOfSurfaces)) {
@@ -1034,7 +1034,7 @@ namespace HeatBalanceIntRadExchange {
                     ObjexxFCL::gio::write(OutputFileDebug, fmtA) << "!============= end of data ======================";
 
                     ObjexxFCL::gio::write(OutputFileDebug, fmtA) << "!============ final view factors =======================";
-                    ObjexxFCL::gio::write(OutputFileDebug, fmtA) << "ZoneProperty:UserViewFactors:bySurfaceName," + thisEnclosure.Name + ',';
+                    ObjexxFCL::gio::write(OutputFileDebug, fmtA) << "ZoneProperty:UserViewFactors:BySurfaceName," + thisEnclosure.Name + ',';
                     for (int SurfNum = 1; SurfNum <= thisEnclosure.NumOfSurfaces; ++SurfNum) {
                         for (int Findex = 1; Findex <= thisEnclosure.NumOfSurfaces; ++Findex) {
                             if (!(SurfNum == thisEnclosure.NumOfSurfaces && Findex == thisEnclosure.NumOfSurfaces)) {
@@ -1303,7 +1303,7 @@ namespace HeatBalanceIntRadExchange {
         Array1D_string enclosureSurfaceNames;
 
         NoUserInputF = true;
-        UserFZoneIndex = inputProcessor->getObjectItemNum("ZoneProperty:UserViewFactors:bySurfaceName", "zone_or_zonelist_name", EnclosureName);
+        UserFZoneIndex = inputProcessor->getObjectItemNum("ZoneProperty:UserViewFactors:BySurfaceName", "zone_or_zonelist_name", EnclosureName);
 
         if (UserFZoneIndex > 0) {
             enclosureSurfaceNames.allocate(N);
@@ -1312,7 +1312,7 @@ namespace HeatBalanceIntRadExchange {
             }
             NoUserInputF = false;
 
-            inputProcessor->getObjectItem("ZoneProperty:UserViewFactors:bySurfaceName",
+            inputProcessor->getObjectItem("ZoneProperty:UserViewFactors:BySurfaceName",
                                           UserFZoneIndex,
                                           cAlphaArgs,
                                           NumAlphas,

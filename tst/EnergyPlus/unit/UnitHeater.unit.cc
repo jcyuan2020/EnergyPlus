@@ -1385,8 +1385,6 @@ TEST_F(EnergyPlusFixture, UnitHeater_SecondPriorityZoneEquipment)
 {
 
     std::string const idf_objects = delimited_string({
-        "Version,9.4;",
-
         "Timestep,1;",
 
         "Building,",

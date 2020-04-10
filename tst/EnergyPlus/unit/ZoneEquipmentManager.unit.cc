@@ -540,7 +540,7 @@ TEST_F(EnergyPlusFixture, ZoneEquipmentManager_CalcZoneMassBalanceTest2)
     DataEnvironment::OutBaroPress = 100000.0;
     Node(ZoneEquipConfig(ZoneNum).ZoneNode).Temp = 20.0;
     Node(ZoneEquipConfig(ZoneNum).ZoneNode).HumRat = 0.004;
-    
+
     DataHVACGlobals::NumPrimaryAirSys = 3;
     DataAirSystems::PrimaryAirSystem.allocate(3);
     DataAirLoop::AirLoopFlow.allocate(3);
@@ -595,8 +595,6 @@ TEST_F(EnergyPlusFixture, ZoneEquipmentManager_CalcZoneMassBalanceTest3)
 {
 
     std::string const idf_objects = delimited_string({
-        " Version,9.4;",
-
         "Zone,",
         "  Space;                   !- Name",
 
@@ -694,8 +692,6 @@ TEST_F(EnergyPlusFixture, ZoneEquipmentManager_CalcZoneMassBalanceTest4)
 {
 
     std::string const idf_objects = delimited_string({
-        " Version,8.4;",
-
         "Zone,",
         "  Space;                   !- Name",
 
@@ -812,7 +808,7 @@ TEST_F(EnergyPlusFixture, ZoneEquipmentManager_CalcZoneMassBalanceTest4)
     EXPECT_EQ(Node(returnNode2).MassFlowRate, 0.0);
     EXPECT_EQ(Node(returnNode3).MassFlowRate, 0.0);
 
-    // Case 2 - send sum of inlet flow back, except system 2 back at 0.9 
+    // Case 2 - send sum of inlet flow back, except system 2 back at 0.9
     Node(inletNode2).MassFlowRate = 2.0;
     Node(inletNode1).MassFlowRate = 1.0;
     Node(inletNode3).MassFlowRate = 3.0;
@@ -829,7 +825,7 @@ TEST_F(EnergyPlusFixture, ZoneEquipmentManager_CalcZoneMassBalanceTest4)
     EXPECT_EQ(Node(returnNode2).MassFlowRate, 0.9);
     EXPECT_EQ(Node(returnNode3).MassFlowRate, 3.0);
 
-    // Case 3 - add exhaust flow, but set system 2 MaxOutAir to zero, expect sum of inlet flow back 
+    // Case 3 - add exhaust flow, but set system 2 MaxOutAir to zero, expect sum of inlet flow back
     Node(ZoneEquipConfig(ZoneNum).ExhaustNode(1)).MassFlowRate = 1.000000001;
     DataAirSystems::PrimaryAirSystem(2).OASysExists = true;
     DataAirLoop::AirLoopFlow(2).DesReturnFrac = 0.9;
@@ -857,8 +853,6 @@ TEST_F(EnergyPlusFixture, ZoneEquipmentManager_DistributeSequentialLoad)
 {
 
     std::string const idf_objects = delimited_string({
-        " Version,9.4;",
-
         "Zone,",
         "  Space;                   !- Name",
 
@@ -1034,8 +1028,6 @@ TEST_F(EnergyPlusFixture, ZoneEquipmentManager_DistributeUniformLoad)
 {
 
     std::string const idf_objects = delimited_string({
-        " Version,9.4;",
-
         "Zone,",
         "  Space;                   !- Name",
 
@@ -1222,8 +1214,6 @@ TEST_F(EnergyPlusFixture, ZoneEquipmentManager_DistributeUniformPLR)
 {
 
     std::string const idf_objects = delimited_string({
-        " Version,9.4;",
-
         "Zone,",
         "  Space;                   !- Name",
 
@@ -1442,8 +1432,6 @@ TEST_F(EnergyPlusFixture, ZoneEquipmentManager_DistributeSequentialUniformPLR)
 {
 
     std::string const idf_objects = delimited_string({
-        " Version,9.4;",
-
         "Zone,",
         "  Space;                   !- Name",
 
@@ -1759,8 +1747,6 @@ TEST_F(EnergyPlusFixture, ZoneEquipmentManager_DistributeSequentialLoad_MixedEqu
 {
 
     std::string const idf_objects = delimited_string({
-        " Version,9.0;",
-
         "Zone,",
         "  Space;                   !- Name",
 
@@ -1960,8 +1946,6 @@ TEST_F(EnergyPlusFixture, ZoneEquipmentManager_DistributeSequentialLoad_MixedEqu
 {
 
     std::string const idf_objects = delimited_string({
-         " Version,9.0;",
-
          "Zone,",
          "  Space;                   !- Name",
 

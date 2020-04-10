@@ -595,7 +595,7 @@ TEST_F(EnergyPlusFixture, ZoneEquipmentManager_CalcZoneMassBalanceTest3)
 {
 
     std::string const idf_objects = delimited_string({
-        " Version,9.3;",
+        " Version,9.4;",
 
         "Zone,",
         "  Space;                   !- Name",
@@ -857,7 +857,7 @@ TEST_F(EnergyPlusFixture, ZoneEquipmentManager_DistributeSequentialLoad)
 {
 
     std::string const idf_objects = delimited_string({
-        " Version,9.3;",
+        " Version,9.4;",
 
         "Zone,",
         "  Space;                   !- Name",
@@ -1034,7 +1034,7 @@ TEST_F(EnergyPlusFixture, ZoneEquipmentManager_DistributeUniformLoad)
 {
 
     std::string const idf_objects = delimited_string({
-        " Version,9.3;",
+        " Version,9.4;",
 
         "Zone,",
         "  Space;                   !- Name",
@@ -1222,7 +1222,7 @@ TEST_F(EnergyPlusFixture, ZoneEquipmentManager_DistributeUniformPLR)
 {
 
     std::string const idf_objects = delimited_string({
-        " Version,9.3;",
+        " Version,9.4;",
 
         "Zone,",
         "  Space;                   !- Name",
@@ -1442,7 +1442,7 @@ TEST_F(EnergyPlusFixture, ZoneEquipmentManager_DistributeSequentialUniformPLR)
 {
 
     std::string const idf_objects = delimited_string({
-        " Version,9.3;",
+        " Version,9.4;",
 
         "Zone,",
         "  Space;                   !- Name",

@@ -12882,9 +12882,8 @@ TEST_F(EnergyPlusFixture, MultiAirLoopTest)
         "  20.44,                                                   !- November Ground Temperature",
         "  20.20;                                                   !- December Ground Temperature",
 
-        "Output:Diagnostics,DisplayExtraWarnings;",
-
-        "Output:Diagnostics,DisplayUnusedSchedules;"});
+        "Output:Diagnostics,DisplayExtraWarnings,DisplayUnusedSchedules;"
+    });
 
     ASSERT_TRUE(process_idf(idf_objects));
 

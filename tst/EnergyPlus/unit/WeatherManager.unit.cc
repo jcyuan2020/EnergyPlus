@@ -845,3 +845,24 @@ TEST_F(SQLiteFixture, DesignDay_EnthalphyAtMaxDB)
 
 
 }
+
+
+TEST_F(EnergyPlusFixture, AddSkyCoverWeatherOutputTest)
+{
+    using DataEnvironment::DayOfYear;
+    using DataEnvironment::Latitude;
+    using DataEnvironment::WaterMainsTemp;
+
+    WaterMainsTempsMethod = WeatherManager::CorrelationMethod;
+    WaterMainsTempsAnnualAvgAirTemp = 9.69;
+    WaterMainsTempsMaxDiffAirTemp = 28.1;
+    DayOfYear = 50;
+
+    Latitude = 40.0;
+    CalcWaterMainsTemp();
+    EXPECT_NEAR(WaterMainsTemp, 6.6667, 0.0001);
+
+    Latitude = -40.0;
+    CalcWaterMainsTemp();
+    EXPECT_NEAR(WaterMainsTemp, 19.3799, 0.0001);
+}

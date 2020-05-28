@@ -846,12 +846,32 @@ TEST_F(SQLiteFixture, DesignDay_EnthalphyAtMaxDB)
 
 }
 
-
+// Test for Issue 7957, adding new sky cover weather output values
 TEST_F(EnergyPlusFixture, AddSkyCoverWeatherOutputTest)
 {
     using DataEnvironment::DayOfYear;
     using DataEnvironment::Latitude;
     using DataEnvironment::WaterMainsTemp;
+
+        // Test get output variables for ZoneAirMassFlowConservation object #5637
+
+    std::string const idf_objects = delimited_string({
+        "Output:Variable,*,Site Outdoor Air Drybulb Temperature,Timestep;",
+        "Output:Variable,*,Site Wind Speed,Timestep;",
+        "Output:Variable,*,Site Total Sky Cover,Timestep;",
+        "Output:Variable,*,Site Opaque Sky Cover,Timestep;",
+        // " Output:Variable,",
+        // "   *, !- Key Value",
+        // "   Zone Air Mass Balance Exhaust Mass Flow Rate, !- Variable Name",
+        //"   hourly;                  !- Reporting Frequency",
+    });
+
+    ASSERT_TRUE(process_idf(idf_objects));
+
+    bool ErrorsFound(false); // If errors detected in input
+
+    // call to process input
+    ErrorsFound = false;
 
     WaterMainsTempsMethod = WeatherManager::CorrelationMethod;
     WaterMainsTempsAnnualAvgAirTemp = 9.69;
@@ -865,4 +885,15 @@ TEST_F(EnergyPlusFixture, AddSkyCoverWeatherOutputTest)
     Latitude = -40.0;
     CalcWaterMainsTemp();
     EXPECT_NEAR(WaterMainsTemp, 19.3799, 0.0001);
+
+    // Examples in another output test
+    EXPECT_EQ("Site Outdoor Air Drybulb Temperature", OutputProcessor::RVariableTypes(1).VarName);
+    EXPECT_EQ("Site Wind Speed", OutputProcessor::RVariableTypes(2).VarName);
+    EXPECT_EQ("Site Total Sky Cover", OutputProcessor::RVariableTypes(3).VarName);
+    EXPECT_EQ("Site Opaque Sky Cover", OutputProcessor::RVariableTypes(4).VarName);
+
+    EXPECT_EQ(1, OutputProcessor::RVariableTypes(1).ReportID);
+    EXPECT_EQ(2, OutputProcessor::RVariableTypes(2).ReportID);
+    EXPECT_EQ(3, OutputProcessor::RVariableTypes(3).ReportID);
+    EXPECT_EQ(4, OutputProcessor::RVariableTypes(4).ReportID);
 }

@@ -857,8 +857,8 @@ TEST_F(EnergyPlusFixture, AddSkyCoverWeatherOutputTest)
 
     std::string const idf_objects = delimited_string({
         "Output:Variable,",
-        "*,"
-        "Site Outdoor Air Drybulb Temperature,"
+        "*,",
+        "Site Outdoor Air Drybulb Temperature,",
         "Timestep;",
         //"Output:Variable,*,Site Wind Speed,Timestep;",
         //"Output:Variable,*,Site Total Sky Cover,Timestep;",

@@ -1065,10 +1065,14 @@ TEST_F(EnergyPlusFixture, AddSkyCoverWeatherOutputTest)
 
     ASSERT_TRUE(process_idf(idf_objects));
 
+    SimulationManager::PostIPProcessing();
+    // bool ErrorsFound = false;
     bool ErrorsFound(false); // If errors detected in input
-
     // call to process input
     ErrorsFound = false;
+
+    DataGlobals::BeginSimFlag = true;
+    SimulationManager::GetProjectData(state.dataZoneTempPredictorCorrector, state.outputFiles);
 
     bool Available(true);
 

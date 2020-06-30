@@ -1142,9 +1142,9 @@ TEST_F(EnergyPlusFixture, AddSkyCoverWeatherOutputTest)
         "*,",
         "Site Outdoor Air Drybulb Temperature,",
         "Timestep;",
-        //"Output:Variable,*,Site Wind Speed,Timestep;",
-        //"Output:Variable,*,Site Total Sky Cover,Timestep;",
-        //"Output:Variable,*,Site Opaque Sky Cover,Timestep;",
+        "Output:Variable,*,Site Wind Speed,Timestep;",
+        "Output:Variable,*,Site Total Sky Cover,Timestep;",
+        "Output:Variable,*,Site Opaque Sky Cover,Timestep;",
         // " Output:Variable,",
         // "   *, !- Key Value",
         // "   Zone Air Mass Balance Exhaust Mass Flow Rate, !- Variable Name",
@@ -1192,16 +1192,17 @@ TEST_F(EnergyPlusFixture, AddSkyCoverWeatherOutputTest)
     //EXPECT_NEAR(WaterMainsTemp, 19.3799, 0.0001);
 
     // Examples in another output test
-    // EXPECT_EQ("Site Outdoor Air Drybulb Temperature", OutputProcessor::RVariableTypes(1).VarName);
+    EXPECT_EQ("Site Outdoor Air Drybulb Temperature", OutputProcessor::RVariableTypes(1).VarNameOnly);
     EXPECT_EQ("Environment:Site Outdoor Air Drybulb Temperature", OutputProcessor::RVariableTypes(1).VarName);
+    EXPECT_EQ("Site Wind Speed", OutputProcessor::RVariableTypes(2).VarNameOnly);
+    EXPECT_EQ("Environment:Site Wind Speed", OutputProcessor::RVariableTypes(2).VarName);
+    EXPECT_EQ("Site Total Sky Cover", OutputProcessor::RVariableTypes(3).VarNameOnly);
+    EXPECT_EQ("Environment:Site Total Sky Cover", OutputProcessor::RVariableTypes(3).VarName);
+    EXPECT_EQ("Site Opaque Sky Cover", OutputProcessor::RVariableTypes(4).VarNameOnly);
+    EXPECT_EQ("Environment:Site Opaque Sky Cover", OutputProcessor::RVariableTypes(4).VarName);
 
-    //EXPECT_EQ("Site Wind Speed", OutputProcessor::RVariableTypes(2).VarName);
-    //EXPECT_EQ("Site Total Sky Cover", OutputProcessor::RVariableTypes(3).VarName);
-    //EXPECT_EQ("Site Opaque Sky Cover", OutputProcessor::RVariableTypes(4).VarName);
-
-    // EXPECT_EQ(1, OutputProcessor::RVariableTypes(1).ReportID);
     EXPECT_EQ(7, OutputProcessor::RVariableTypes(1).ReportID);
-    // EXPECT_EQ(2, OutputProcessor::RVariableTypes(2).ReportID);
-    //EXPECT_EQ(3, OutputProcessor::RVariableTypes(3).ReportID);
-    //EXPECT_EQ(4, OutputProcessor::RVariableTypes(4).ReportID);
+    EXPECT_EQ(8, OutputProcessor::RVariableTypes(2).ReportID);
+    EXPECT_EQ(9, OutputProcessor::RVariableTypes(3).ReportID);
+    EXPECT_EQ(10, OutputProcessor::RVariableTypes(4).ReportID);
 }

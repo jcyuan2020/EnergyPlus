@@ -1043,14 +1043,9 @@ TEST_F(EnergyPlusFixture, IRHoriz_InterpretWeatherCalculateMissingIRHoriz) {
 // Test for Issue 7957, adding new sky cover weather output values
 TEST_F(EnergyPlusFixture, AddSkyCoverWeatherOutputTest)
 {
-    //using DataEnvironment::DayOfYear;
-    //using DataEnvironment::Latitude;
-    //using DataEnvironment::WaterMainsTemp;
-
     // Test get output variables for Total Sky Cover and Opaque Sky Cover
 
     std::string const idf_objects = delimited_string({
-
         "Timestep,4;"
 
         "SimulationControl,",
@@ -1145,21 +1140,14 @@ TEST_F(EnergyPlusFixture, AddSkyCoverWeatherOutputTest)
         "Output:Variable,*,Site Wind Speed,Timestep;",
         "Output:Variable,*,Site Total Sky Cover,Timestep;",
         "Output:Variable,*,Site Opaque Sky Cover,Timestep;",
-        // " Output:Variable,",
-        // "   *, !- Key Value",
-        // "   Zone Air Mass Balance Exhaust Mass Flow Rate, !- Variable Name",
-        //"   hourly;                  !- Reporting Frequency",
     });
 
     ASSERT_TRUE(process_idf(idf_objects));
 
     SimulationManager::PostIPProcessing();
-    // bool ErrorsFound = false;
-    bool ErrorsFound(false); // If errors detected in input
-    // call to process input
+    bool ErrorsFound(false);
     ErrorsFound = false;
 
-    // Set an actual weather file to Chicago EPW
     WeatherManager::WeatherFileExists = true;
     DataStringGlobals::inputWeatherFileName = configured_source_directory() + "/weather/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.epw";
 
@@ -1167,31 +1155,11 @@ TEST_F(EnergyPlusFixture, AddSkyCoverWeatherOutputTest)
     SimulationManager::GetProjectData(state.dataZoneTempPredictorCorrector, state.outputFiles);
 
     bool Available(true);
-
     Available = true;
 
     EnergyPlus::DataGlobals::BeginSimFlag = true;
-
     WeatherManager::GetNextEnvironment(state, Available, ErrorsFound);
-    // bool Available{false};
-    // bool ErrorsFound{false};
-    // ASSERT_THROW(WeatherManager::GetNextEnvironment(state, Available, ErrorsFound), std::runtime_error);
-    // ASSERT_TRUE(ErrorsFound);
 
-    //WaterMainsTempsMethod = WeatherManager::CorrelationMethod;
-    //WaterMainsTempsAnnualAvgAirTemp = 9.69;
-    //WaterMainsTempsMaxDiffAirTemp = 28.1;
-    //DayOfYear = 50;
-
-    //Latitude = 40.0;
-    //CalcWaterMainsTemp();
-    //EXPECT_NEAR(WaterMainsTemp, 6.6667, 0.0001);
-
-    //Latitude = -40.0;
-    //CalcWaterMainsTemp();
-    //EXPECT_NEAR(WaterMainsTemp, 19.3799, 0.0001);
-
-    // Examples in another output test
     EXPECT_EQ("Site Outdoor Air Drybulb Temperature", OutputProcessor::RVariableTypes(1).VarNameOnly);
     EXPECT_EQ("Environment:Site Outdoor Air Drybulb Temperature", OutputProcessor::RVariableTypes(1).VarName);
     EXPECT_EQ("Site Wind Speed", OutputProcessor::RVariableTypes(2).VarNameOnly);

@@ -1074,6 +1074,8 @@ TEST_F(EnergyPlusFixture, AddSkyCoverWeatherOutputTest)
 
     Available = true;
 
+    EnergyPlus::DataGlobals::BeginSimFlag = true;
+
     WeatherManager::GetNextEnvironment(state, Available, ErrorsFound);
     // bool Available{false};
     // bool ErrorsFound{false};

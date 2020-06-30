@@ -1070,6 +1070,16 @@ TEST_F(EnergyPlusFixture, AddSkyCoverWeatherOutputTest)
     // call to process input
     ErrorsFound = false;
 
+    bool Available(true);
+
+    Available = true;
+
+    WeatherManager::GetNextEnvironment(state, Available, ErrorsFound);
+    // bool Available{false};
+    // bool ErrorsFound{false};
+    // ASSERT_THROW(WeatherManager::GetNextEnvironment(state, Available, ErrorsFound), std::runtime_error);
+    // ASSERT_TRUE(ErrorsFound);
+
     //WaterMainsTempsMethod = WeatherManager::CorrelationMethod;
     //WaterMainsTempsAnnualAvgAirTemp = 9.69;
     //WaterMainsTempsMaxDiffAirTemp = 28.1;

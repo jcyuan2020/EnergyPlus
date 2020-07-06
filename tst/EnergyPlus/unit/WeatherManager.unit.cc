@@ -1152,7 +1152,8 @@ TEST_F(EnergyPlusFixture, AddSkyCoverWeatherOutputTest)
     DataStringGlobals::inputWeatherFileName = configured_source_directory() + "/weather/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.epw";
 
     DataGlobals::BeginSimFlag = true;
-    SimulationManager::GetProjectData(state.dataZoneTempPredictorCorrector, state.outputFiles);
+    // SimulationManager::GetProjectData(state.dataZoneTempPredictorCorrector, state.outputFiles);
+    SimulationManager::GetProjectData(state, state.outputFiles);
 
     bool Available(true);
     Available = true;

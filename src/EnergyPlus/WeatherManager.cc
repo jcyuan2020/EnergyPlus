@@ -3978,6 +3978,8 @@ namespace WeatherManager {
                 RField9 >> RField10 >> RField11 >> RField12 >> RField13 >> RField14 >> RField15 >> RField16 >> RField17 >> RField18 >> RField19 >>
                 RField20 >> RField21;
             if (flags.err()) goto Label901;
+            if (validateWeatherDataNoErr(RField1, RField2, RField3, RField4) != 0)
+                ShowWarningError("Weather data Dewpoint temperature correction occured.");
         }
         for (Count = 1; Count <= 21; ++Count) {
             Pos = index(Line, ',');
@@ -10786,6 +10788,43 @@ namespace WeatherManager {
 
         print(OutputFiles::getSingleton().eio, "{}", ss.str());
     }
+
+    int validateWeatherDataNoErr(Real64 TDB, Real64 &TDP, Real64 RH, Real64 PB)
+    {
+        // J. Yuan 2020-07-17: check the validity of temperaure and humidty related data
+
+        Real64 RH_input(0.0);
+        Real64 Pv;
+        Real64 w;
+        Real64 TDP_calc;
+        Real64 err_tol(1e-1);
+        int returnval(0);
+
+        RH_input = RH;
+        if (RH > 100.0) {
+            ShowWarningError("Weather data check: Relative humdity  out of range. Higher than 100 percent. Reset to 100 percent.");
+            RH_input = 100;
+        }
+        
+        if (RH < 0.0) {
+            ShowWarningError("Weather data check: Relative humdity  out of range. Lower than 0. Reset to 0.");
+            RH_input = 0.0;
+        }
+        
+        Pv = RH_input * 0.01 * PsyPsatFnTemp(TDB);
+        w = 0.62198 * Pv /(PB - Pv); 
+
+        TDP_calc = PsyTsatFnPb(Pv);
+
+        if (TDP_calc - TDP < -err_tol || TDP_calc - TDP > err_tol) {
+            ShowWarningError("Weather data check: Dew-Point temperature does not match. Reset using Relative Humidity derived value.");
+            TDP = TDP_calc;
+            returnval = 1;
+        }
+
+        return returnval;
+    }
+
 } // namespace WeatherManager
 
 } // namespace EnergyPlus

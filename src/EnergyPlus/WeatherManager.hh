@@ -947,6 +947,8 @@ namespace WeatherManager {
 
     void ReportWaterMainsTempParameters();
 
+    int validateWeatherDataNoErr(Real64 TDB, Real64 &TDP, Real64 RH, Real64 PB);
+
 } // namespace WeatherManager
 
 } // namespace EnergyPlus

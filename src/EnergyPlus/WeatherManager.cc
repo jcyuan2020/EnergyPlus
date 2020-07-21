@@ -10796,6 +10796,7 @@ namespace WeatherManager {
         Real64 RH_input(0.0);
         Real64 Pv;
         Real64 w;
+        Real64 Pdew;
         Real64 TDP_calc;
         Real64 err_tol(1e-1);
         int returnval(0);
@@ -10812,9 +10813,9 @@ namespace WeatherManager {
         }
         
         Pv = RH_input * 0.01 * PsyPsatFnTemp(TDB);
-        w = 0.62198 * Pv /(PB - Pv); 
-
-        TDP_calc = PsyTsatFnPb(Pv);
+        w = 0.62198 * Pv / (PB - Pv); 
+        Pdew = PB * w / (0.62198 + w);
+        TDP_calc = PsyTdpFnWPb(w, Pdew);
 
         if (TDP_calc - TDP < -err_tol || TDP_calc - TDP > err_tol) {
             ShowWarningError("Weather data check: Dew-Point temperature does not match. Reset using Relative Humidity derived value.");

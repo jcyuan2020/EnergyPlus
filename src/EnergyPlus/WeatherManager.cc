@@ -10815,7 +10815,7 @@ namespace WeatherManager {
         Pv = RH_input * 0.01 * PsyPsatFnTemp(TDB);
         w = 0.62198 * Pv / (PB - Pv); 
         Pdew = PB * w / (0.62198 + w);
-        TDP_calc = PsyTdpFnWPb(w, Pdew);
+        TDP_calc = PsyTdpFnWPb(w, PB);
 
         if (TDP_calc - TDP < -err_tol || TDP_calc - TDP > err_tol) {
             ShowWarningError("Weather data check: Dew-Point temperature does not match. Reset using Relative Humidity derived value.");

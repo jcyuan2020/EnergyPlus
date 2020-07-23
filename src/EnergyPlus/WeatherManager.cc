@@ -10813,17 +10813,64 @@ namespace WeatherManager {
         }
         
         Pv = RH_input * 0.01 * PsyPsatFnTemp(TDB);
+        TDP_calc = PsyTsatFnPb_raw(Pv);
+        
         // w = 0.62198 * Pv / (PB - Pv); 
+        w = 0.621945 * Pv / (PB - Pv); 
         // Pdew = PB * w / (0.62198 + w);
-        // TDP_calc = PsyTdpFnWPb(w, PB);
-        // TDP_calc = PsyTsatFnPb_raw(Pv);
+        Pdew = PB * w / (0.621945 + w);
+        TDP_calc = PsyTdpFnWPb(w, PB);
 
-        // test new algorithms 1
+        // test new algorithm 1
         Real64 a = 17.62;
         Real64 b = 243.12;
         Real64 alpha = -1.0;
         alpha = log(RH_input / 100.0) + a * TDB / (b + TDB);
         TDP_calc = b * alpha / (a - alpha);
+
+        // test new algorithm 2
+        Real64 c1 = -5.6745359e1;
+        Real64 c2 = 6.3925247;
+        Real64 c3 = -9.6778430e-1;
+        Real64 c4 = 6.2215701e-3;
+        Real64 c5 = 2.0747825e-3;
+        Real64 c6 = -9.4840240e-5;
+        Real64 c7 = 4.1635019;
+
+        Real64 c8 = -5.8002206e1;
+        Real64 c9 = 1.3914993;
+        Real64 c10 = -4.8640239;
+        Real64 c11 = 4.1764768e-1;
+        Real64 c12 = -1.4452093e-2;
+        Real64 c13 = 6.5459673;
+
+        Real64 tdbc = TDB * 0.01 + 2.7315;
+
+        Real64 lnpsat = 1000;
+
+        if (TDB < 0.0)
+            lnpsat = c1/tdbc + c2 + c3*tdbc + c4*tdbc*tdbc + c5*tdbc*tdbc*tdbc + c6*tdbc*tdbc*tdbc*tdbc + c7*log(TDB + 273.15);
+        else
+            lnpsat =
+                c8 / tdbc + c9 + c10 * tdbc + c11 * tdbc * tdbc + c12 * tdbc * tdbc * tdbc + c13 * log(TDB + 273.15);
+
+        Real64 lnPv = 5;
+
+        lnPv = log(RH_input*0.01) + lnpsat;
+        
+        Real64 c14 = 6.54;
+        Real64 c15 = 14.526;
+        Real64 c16 = 0.7389;
+        Real64 c17 = 0.09486;
+        Real64 c18 = 0.4569; 
+
+        Pv = exp(lnPv);
+        lnPv = lnPv - 3.0 * log(10);
+
+        TDP_calc = c14 + c15 * lnPv + c16 * lnPv * lnPv + c17 * lnPv * lnPv * lnPv +
+                   c18 * pow(exp(lnPv), 0.1984);
+        if (TDP_calc < 0.0 || TDP_calc > 93.0 ) 
+            TDP_calc = 6.09 + 12.608 * lnPv + 0.4959 * lnPv * lnPv;
 
         if (TDP_calc - TDP < -err_tol || TDP_calc - TDP > err_tol) {
             ShowWarningError("Weather data check: Dew-Point temperature does not match. Reset using Relative Humidity derived value.");

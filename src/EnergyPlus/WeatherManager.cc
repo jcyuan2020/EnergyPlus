@@ -10807,15 +10807,23 @@ namespace WeatherManager {
             RH_input = 100;
         }
         
-        if (RH < 0.0) {
+        if (RH <= 0.0) {
             ShowWarningError("Weather data check: Relative humdity  out of range. Lower than 0. Reset to 0.");
-            RH_input = 0.0;
+            RH_input = 1.0e-6;
         }
         
         Pv = RH_input * 0.01 * PsyPsatFnTemp(TDB);
-        w = 0.62198 * Pv / (PB - Pv); 
-        Pdew = PB * w / (0.62198 + w);
-        TDP_calc = PsyTdpFnWPb(w, PB);
+        // w = 0.62198 * Pv / (PB - Pv); 
+        // Pdew = PB * w / (0.62198 + w);
+        // TDP_calc = PsyTdpFnWPb(w, PB);
+        // TDP_calc = PsyTsatFnPb_raw(Pv);
+
+        // test new algorithms 1
+        Real64 a = 17.62;
+        Real64 b = 243.12;
+        Real64 alpha = -1.0;
+        alpha = log(RH_input / 100.0) + a * TDB / (b + TDB);
+        TDP_calc = b * alpha / (a - alpha);
 
         if (TDP_calc - TDP < -err_tol || TDP_calc - TDP > err_tol) {
             ShowWarningError("Weather data check: Dew-Point temperature does not match. Reset using Relative Humidity derived value.");

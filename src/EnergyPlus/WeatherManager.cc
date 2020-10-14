@@ -3172,7 +3172,7 @@ namespace WeatherManager {
                 DirectRad >> DiffuseRad >> GLBHorizIllum >> DirectNrmIllum >> DiffuseHorizIllum >> ZenLum >> WindDir >> WindSpeed >> TotalSkyCover >>
                 OpaqueSkyCover >> Visibility >> CeilHeight >> RField21;
             if (flags.err()) ErrorInterpretWeatherDataLine(WYear, WMonth, WDay, WHour, WMinute, SaveLine, Line);
-            if (validateWeatherDataNoErr(RField1, RField2, RField3, RField4) != 0)
+            if (validateWeatherDataNoErr(DryBulb, DewPoint, RelHum, AtmPress) != 0)
                 ShowWarningError("Weather data Dewpoint temperature correction occured.");
         }
         for (int i = 1; i <= 21; ++i) {
@@ -8735,14 +8735,14 @@ namespace WeatherManager {
             RH_input = 1.0e-6;
         }
         
-        Pv = RH_input * 0.01 * PsyPsatFnTemp(TDB);
-        TDP_calc = PsyTsatFnPb_raw(Pv);
+        Pv = RH_input * 0.01 * EnergyPlus::Psychrometrics::PsyPsatFnTemp(TDB);
+        TDP_calc = EnergyPlus::Psychrometrics::PsyTsatFnPb_raw(Pv);
         
         // w = 0.62198 * Pv / (PB - Pv); 
         w = 0.621945 * Pv / (PB - Pv); 
         // Pdew = PB * w / (0.62198 + w);
         Pdew = PB * w / (0.621945 + w);
-        TDP_calc = PsyTdpFnWPb(w, PB);
+        TDP_calc = EnergyPlus::Psychrometrics::PsyTdpFnWPb(w, PB);
 
         // test new algorithm 1
         Real64 a = 17.62;

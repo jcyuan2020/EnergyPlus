@@ -68,13 +68,11 @@ extern "C" {
 #include "IOFiles.hh"
 #include <EnergyPlus/BranchInputManager.hh>
 #include <EnergyPlus/BranchNodeConnections.hh>
-#include <EnergyPlus/CommandLineInterface.hh>
 #include <EnergyPlus/Data/EnergyPlusData.hh>
 #include <EnergyPlus/DataEnvironment.hh>
 #include <EnergyPlus/DataErrorTracking.hh>
 #include <EnergyPlus/DataGlobalConstants.hh>
 #include <EnergyPlus/DataGlobals.hh>
-#include <EnergyPlus/DataPrecisionGlobals.hh>
 #include <EnergyPlus/DataReportingFlags.hh>
 #include <EnergyPlus/DataStringGlobals.hh>
 #include <EnergyPlus/DataSystemVariables.hh>
@@ -431,7 +429,7 @@ namespace UtilityRoutines {
         return SameString(a, b);
     }
 
-    void appendPerfLog(IOFiles &ioFiles, std::string const &colHeader, std::string const &colValue, bool finalColumn)
+    void appendPerfLog(EnergyPlusData &state, std::string const &colHeader, std::string const &colValue, bool finalColumn)
     // Add column to the performance log file (comma separated) which is appended to existing log.
     // The finalColumn (an optional argument) being true triggers the actual file to be written or appended.
     // J.Glazer February 2020
@@ -450,7 +448,7 @@ namespace UtilityRoutines {
         if (finalColumn) {
             std::fstream fsPerfLog;
             if (!FileSystem::fileExists(DataStringGlobals::outputPerfLogFileName)) {
-                if (ioFiles.outputControl.perflog) {
+                if (state.files.outputControl.perflog) {
                     fsPerfLog.open(DataStringGlobals::outputPerfLogFileName, std::fstream::out); //open file normally
                     if (!fsPerfLog) {
                         ShowFatalError("appendPerfLog: Could not open file \"" + DataStringGlobals::outputPerfLogFileName + "\" for output (write).");
@@ -459,7 +457,7 @@ namespace UtilityRoutines {
                     fsPerfLog << appendPerfLog_valuesRow << std::endl;
                 }
             } else {
-                if (ioFiles.outputControl.perflog) {
+                if (state.files.outputControl.perflog) {
                     fsPerfLog.open(DataStringGlobals::outputPerfLogFileName, std::fstream::app); //append to already existing file
                     if (!fsPerfLog) {
                         ShowFatalError("appendPerfLog: Could not open file \"" + DataStringGlobals::outputPerfLogFileName + "\" for output (append).");
@@ -473,7 +471,8 @@ namespace UtilityRoutines {
 
     bool ValidateFuelType(std::string const &FuelTypeInput,
                           std::string &FuelTypeOutput,
-                          bool &FuelTypeErrorsFound)
+                          bool &FuelTypeErrorsFound,
+                          bool const &AllowSteamAndDistrict)
     {
         // FUNCTION INFORMATION:
         //       AUTHOR         Dareum Nam
@@ -482,7 +481,7 @@ namespace UtilityRoutines {
         // PURPOSE OF THIS FUNCTION:
         // Validates fuel types and sets output strings
 
-        auto const SELECT_CASE_var(FuelTypeInput);
+        auto const SELECT_CASE_var(UtilityRoutines::MakeUPPERCase(FuelTypeInput));
 
         if (SELECT_CASE_var == "ELECTRICITY") {
             FuelTypeOutput = "Electricity";
@@ -515,43 +514,19 @@ namespace UtilityRoutines {
             FuelTypeOutput = "OtherFuel2";
 
         } else {
-            FuelTypeErrorsFound = true;
-        }
-
-        return FuelTypeErrorsFound;
-    }
-
-    bool ValidateFuelTypeWithFuelTypeNum(std::string const &FuelTypeInput,
-                                         int &FuelTypeNum,
-                                         bool &FuelTypeErrorsFound)
-    {
-        // FUNCTION INFORMATION:
-        //       AUTHOR         Dareum Nam
-        //       DATE WRITTEN   May 2020
-
-        // PURPOSE OF THIS FUNCTION:
-        // Validates fuel types and sets output strings with fuel type number (DXCoils.cc and HVACVariableRefrigerantFlow.cc)
-
-        if (SameString(FuelTypeInput, "Electricity")) {
-            FuelTypeNum = 1; // FuelTypeElectricity
-        } else if (SameString(FuelTypeInput, "NaturalGas")) {
-            FuelTypeNum = 2; // FuelTypeNaturalGas
-        } else if (SameString(FuelTypeInput, "Propane")) {
-            FuelTypeNum = 3; // FuelTypePropaneGas
-        } else if (SameString(FuelTypeInput, "Diesel")) {
-            FuelTypeNum = 4; // FuelTypeDiesel
-        } else if (SameString(FuelTypeInput, "Gasoline")) {
-            FuelTypeNum = 5; // FuelTypeGasoline
-        } else if (SameString(FuelTypeInput, "FuelOilNo1")) {
-            FuelTypeNum = 6; // FuelTypeFuelOil1
-        } else if (SameString(FuelTypeInput, "FuelOilNo2")) {
-            FuelTypeNum = 7; // FuelTypeFuelOil2
-        } else if (SameString(FuelTypeInput, "OtherFuel1")) {
-            FuelTypeNum = 8; // FuelTypeOtherFuel1
-        } else if (SameString(FuelTypeInput, "OtherFuel2")) {
-            FuelTypeNum = 9; // FuelTypeOtherFuel2
-        } else {
-            FuelTypeErrorsFound = true;
+            if (AllowSteamAndDistrict) {
+                if (SELECT_CASE_var == "STEAM") {
+                    FuelTypeOutput = "Steam";
+                } else if (SELECT_CASE_var == "DISTRICTHEATING") {
+                    FuelTypeOutput = "DistrictHeating";
+                } else if (SELECT_CASE_var == "DISTRICTCOOLING") {
+                    FuelTypeOutput = "DistrictCooling";
+                } else {
+                    FuelTypeErrorsFound = true;
+                }
+            } else {
+                FuelTypeErrorsFound = true;
+            }
         }
 
         return FuelTypeErrorsFound;
@@ -641,7 +616,6 @@ namespace UtilityRoutines {
         // na
 
         // Using/Aliasing
-        using namespace DataPrecisionGlobals;
         using namespace DataSystemVariables;
         using namespace DataTimings;
         using namespace DataErrorTracking;
@@ -691,13 +665,13 @@ namespace UtilityRoutines {
             AskForConnectionsReport = false; // Set false here in case any further fatal errors in below processing...
 
             ShowMessage("Fatal error -- final processing.  More error messages may appear.");
-            SetupNodeVarsForReporting(state.files);
+            SetupNodeVarsForReporting(state);
 
             ErrFound = false;
             TerminalError = false;
-            TestBranchIntegrity(state, state.files, ErrFound);
+            TestBranchIntegrity(state, ErrFound);
             if (ErrFound) TerminalError = true;
-            TestAirPathIntegrity(state, state.files, ErrFound);
+            TestAirPathIntegrity(state, ErrFound);
             if (ErrFound) TerminalError = true;
             CheckMarkedNodes(ErrFound);
             if (ErrFound) TerminalError = true;
@@ -707,8 +681,8 @@ namespace UtilityRoutines {
             if (ErrFound) TerminalError = true;
 
             if (!TerminalError) {
-                ReportAirLoopConnections(state, state.files);
-                ReportLoopConnections(state, state.files);
+                ReportAirLoopConnections(state);
+                ReportLoopConnections(state);
             }
 
         } else if (!ExitDuringSimulations) {
@@ -717,14 +691,14 @@ namespace UtilityRoutines {
         }
 
         if (AskForSurfacesReport) {
-            ReportSurfaces(state.files);
+            ReportSurfaces(state);
         }
 
         ReportSurfaceErrors();
         CheckPlantOnAbort();
         ShowRecurringErrors();
         SummarizeErrors();
-        CloseMiscOpenFiles(state.files);
+        CloseMiscOpenFiles(state);
         NumWarnings = fmt::to_string(TotalWarningErrors);
         NumSevere = fmt::to_string(TotalSevereErrors);
         NumWarningsDuringWarmup = fmt::to_string(TotalWarningErrorsDuringWarmup);
@@ -777,7 +751,7 @@ namespace UtilityRoutines {
         // Output detailed ZONE time series data
         SimulationManager::OpenOutputJsonFiles(state.files.json);
 
-        ResultsFramework::resultsFramework->writeOutputs(state.files);
+        ResultsFramework::resultsFramework->writeOutputs(state);
 
 #ifdef EP_Detailed_Timings
         epSummaryTimes(state.files.audit, Time_Finish - Time_Start);
@@ -790,7 +764,7 @@ namespace UtilityRoutines {
         return EXIT_FAILURE;
     }
 
-    void CloseMiscOpenFiles(IOFiles &ioFiles)
+    void CloseMiscOpenFiles(EnergyPlusData &state)
     {
 
         // SUBROUTINE INFORMATION:
@@ -830,17 +804,17 @@ namespace UtilityRoutines {
         //      INTEGER :: UnitNumber
         //      INTEGER :: ios
 
-        CloseReportIllumMaps(ioFiles);
-        CloseDFSFile(ioFiles);
+        CloseReportIllumMaps(state);
+        CloseDFSFile(state);
 
-        if (DebugOutput || ioFiles.debug.position() > 0) {
-            ioFiles.debug.close();
+        if (DebugOutput || (state.files.debug.good() && state.files.debug.position() > 0)) {
+            state.files.debug.close();
         } else {
-            ioFiles.debug.del();
+            state.files.debug.del();
         }
     }
 
-    int EndEnergyPlus(IOFiles &ioFiles)
+    int EndEnergyPlus(EnergyPlusData &state)
     {
 
         // SUBROUTINE INFORMATION:
@@ -861,7 +835,6 @@ namespace UtilityRoutines {
         // na
 
         // Using/Aliasing
-        using namespace DataPrecisionGlobals;
         using namespace DataSystemVariables;
         using namespace DataTimings;
         using namespace DataErrorTracking;
@@ -900,7 +873,7 @@ namespace UtilityRoutines {
         ReportSurfaceErrors();
         ShowRecurringErrors();
         SummarizeErrors();
-        CloseMiscOpenFiles(ioFiles);
+        CloseMiscOpenFiles(state);
         NumWarnings = RoundSigDigits(TotalWarningErrors);
         strip(NumWarnings);
         NumSevere = RoundSigDigits(TotalSevereErrors);
@@ -918,7 +891,7 @@ namespace UtilityRoutines {
         if (Time_Finish < Time_Start) Time_Finish += 24.0 * 3600.0;
         Elapsed_Time = Time_Finish - Time_Start;
         if (DataGlobals::createPerfLog) {
-            UtilityRoutines::appendPerfLog(ioFiles, "Run Time [seconds]", RoundSigDigits(Elapsed_Time, 2));
+            UtilityRoutines::appendPerfLog(state, "Run Time [seconds]", RoundSigDigits(Elapsed_Time, 2));
         }
 #ifdef EP_Detailed_Timings
         epStopTime("EntireRun=");
@@ -937,9 +910,9 @@ namespace UtilityRoutines {
         ResultsFramework::resultsFramework->SimulationInformation.setNumErrorsSummary(NumWarnings, NumSevere);
 
         if (DataGlobals::createPerfLog) {
-            UtilityRoutines::appendPerfLog(ioFiles, "Run Time [string]", Elapsed);
-            UtilityRoutines::appendPerfLog(ioFiles, "Number of Warnings", NumWarnings);
-            UtilityRoutines::appendPerfLog(ioFiles, "Number of Severe", NumSevere, true); // last item so write the perfLog file
+            UtilityRoutines::appendPerfLog(state, "Run Time [string]", Elapsed);
+            UtilityRoutines::appendPerfLog(state, "Number of Warnings", NumWarnings);
+            UtilityRoutines::appendPerfLog(state, "Number of Severe", NumSevere, true); // last item so write the perfLog file
         }
         ShowMessage("EnergyPlus Warmup Error Summary. During Warmup: " + NumWarningsDuringWarmup + " Warning; " + NumSevereDuringWarmup +
                     " Severe Errors.");
@@ -949,7 +922,7 @@ namespace UtilityRoutines {
         DisplayString("EnergyPlus Run Time=" + Elapsed);
 
         {
-            auto tempfl = ioFiles.endFile.try_open(ioFiles.outputControl.end);
+            auto tempfl = state.files.endFile.try_open(state.files.outputControl.end);
             if (!tempfl.good()) {
                 DisplayString("EndEnergyPlus: Could not open file " + tempfl.fileName + " for output (write).");
             }
@@ -957,9 +930,9 @@ namespace UtilityRoutines {
         }
 
         // Output detailed ZONE time series data
-        SimulationManager::OpenOutputJsonFiles(ioFiles.json);
+        SimulationManager::OpenOutputJsonFiles(state.files.json);
 
-        ResultsFramework::resultsFramework->writeOutputs(ioFiles);
+        ResultsFramework::resultsFramework->writeOutputs(state);
 
 #ifdef EP_Detailed_Timings
         epSummaryTimes(Time_Finish - Time_Start);
@@ -1584,7 +1557,6 @@ namespace UtilityRoutines {
         // Calls StoreRecurringErrorMessage utility routine.
 
         // Using/Aliasing
-        using namespace DataPrecisionGlobals;
         using namespace DataStringGlobals;
         using namespace DataErrorTracking;
 
@@ -1639,7 +1611,6 @@ namespace UtilityRoutines {
         // Calls StoreRecurringErrorMessage utility routine.
 
         // Using/Aliasing
-        using namespace DataPrecisionGlobals;
         using namespace DataStringGlobals;
         using namespace DataErrorTracking;
 
@@ -1694,7 +1665,6 @@ namespace UtilityRoutines {
         // Calls StoreRecurringErrorMessage utility routine.
 
         // Using/Aliasing
-        using namespace DataPrecisionGlobals;
         using namespace DataStringGlobals;
         using namespace DataErrorTracking;
 
@@ -1746,7 +1716,6 @@ namespace UtilityRoutines {
         // of occurrences and optional tracking of associated min, max, and sum values
 
         // Using/Aliasing
-        using namespace DataPrecisionGlobals;
         using namespace DataStringGlobals;
         using namespace DataErrorTracking;
         using DataGlobals::DoingSizing;

@@ -62,18 +62,17 @@
 
 namespace EnergyPlus {
 
-    // Forward declarations
-    struct EnergyPlusData;
-    class InputOutputFile;
-    class IOFiles;
+// Forward declarations
+class InputOutputFile;
+struct EnergyPlusData;
 
 int AbortEnergyPlus(EnergyPlusData &state);
 
-void CloseMiscOpenFiles(IOFiles &ioFiles);
+void CloseMiscOpenFiles(EnergyPlusData &state);
 
 void CloseOutOpenFiles();
 
-int EndEnergyPlus(IOFiles &ioFiles);
+int EndEnergyPlus(EnergyPlusData &state);
 
 int FindUnitNumber(std::string const &FileName); // File name to be searched.
 
@@ -570,11 +569,9 @@ namespace UtilityRoutines {
         bool operator()(const std::string& a, const std::string& b) const noexcept;
     };
 
-    void appendPerfLog(IOFiles &ioFiles, std::string const &colHeader, std::string const &colValue, bool finalColumn=false);
+    void appendPerfLog(EnergyPlusData &state, std::string const &colHeader, std::string const &colValue, bool finalColumn=false);
 
-    bool ValidateFuelType(std::string const &FuelTypeInput, std::string &FuelTypeOutput, bool &FuelTypeErrorsFound);
-
-    bool ValidateFuelTypeWithFuelTypeNum(std::string const &FuelTypeInput, int &FuelTypeNum, bool &FuelTypeErrorsFound);
+    bool ValidateFuelType(std::string const &FuelTypeInput, std::string &FuelTypeOutput, bool &FuelTypeErrorsFound, bool const &AllowSteamAndDistrict = false);
 
     bool ValidateFuelTypeWithAssignResourceTypeNum(std::string const &FuelTypeInput, std::string &FuelTypeOutput, int &FuelTypeNum, bool &FuelTypeErrorsFound);
 

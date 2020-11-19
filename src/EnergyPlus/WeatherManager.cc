@@ -3193,8 +3193,8 @@ namespace WeatherManager {
                                             RField21);
 
             if (!succeeded) ErrorInterpretWeatherDataLine(state, WYear, WMonth, WDay, WHour, WMinute, SaveLine, Line);
-            if (validateWeatherDataNoErr(DryBulb, DewPoint, RelHum, AtmPress) != 0)
-                ShowWarningError("Weather data Dewpoint temperature correction occured.");
+            if (validateWeatherDataNoErr(state, DryBulb, DewPoint, RelHum, AtmPress) != 0)
+                ShowWarningError(state, "Weather data Dewpoint temperature correction occured.");
         }
         for (int i = 1; i <= 21; ++i) {
             Pos = index(Line, ',');
@@ -8720,7 +8720,7 @@ namespace WeatherManager {
         }
     }
 
-    int validateWeatherDataNoErr(Real64 TDB, Real64 &TDP, Real64 RH, Real64 PB)
+    int validateWeatherDataNoErr(EnergyPlusData &state, Real64 TDB, Real64 &TDP, Real64 RH, Real64 PB)
     {
         // J. Yuan 2020-07-17: check the validity of temperaure and humidty related data
 
@@ -8734,23 +8734,23 @@ namespace WeatherManager {
 
         RH_input = RH;
         if (RH > 100.0) {
-            ShowWarningError("Weather data check: Relative humdity  out of range. Higher than 100 percent. Reset to 100 percent.");
+            ShowWarningError(state, "Weather data check: Relative humdity  out of range. Higher than 100 percent. Reset to 100 percent.");
             RH_input = 100;
         }
         
         if (RH <= 0.0) {
-            ShowWarningError("Weather data check: Relative humdity  out of range. Lower than 0. Reset to 0.");
+            ShowWarningError(state, "Weather data check: Relative humdity  out of range. Lower than 0. Reset to 0.");
             RH_input = 1.0e-6;
         }
         
-        Pv = RH_input * 0.01 * EnergyPlus::Psychrometrics::PsyPsatFnTemp(TDB);
-        TDP_calc = EnergyPlus::Psychrometrics::PsyTsatFnPb_raw(Pv);
+        Pv = RH_input * 0.01 * EnergyPlus::Psychrometrics::PsyPsatFnTemp(state, TDB);
+        TDP_calc = EnergyPlus::Psychrometrics::PsyTsatFnPb_raw(state, Pv);
         
         // w = 0.62198 * Pv / (PB - Pv); 
         w = 0.621945 * Pv / (PB - Pv); 
         // Pdew = PB * w / (0.62198 + w);
         Pdew = PB * w / (0.621945 + w);
-        TDP_calc = EnergyPlus::Psychrometrics::PsyTdpFnWPb(w, PB);
+        TDP_calc = EnergyPlus::Psychrometrics::PsyTdpFnWPb(state, w, PB);
 
         // test new algorithm 1
         Real64 a = 17.62;
@@ -8804,7 +8804,7 @@ namespace WeatherManager {
             TDP_calc = 6.09 + 12.608 * lnPv + 0.4959 * lnPv * lnPv;
 
         if (TDP_calc - TDP < -err_tol || TDP_calc - TDP > err_tol) {
-            ShowWarningError("Weather data check: Dew-Point temperature does not match. Reset using Relative Humidity derived value.");
+            ShowWarningError(state, "Weather data check: Dew-Point temperature does not match. Reset using Relative Humidity derived value.");
             TDP = TDP_calc;
             returnval = 1;
         }

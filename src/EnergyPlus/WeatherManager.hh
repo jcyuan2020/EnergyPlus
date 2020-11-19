@@ -774,7 +774,7 @@ namespace WeatherManager {
     void ReportWaterMainsTempParameters(EnergyPlusData &state);
     void calcSky(EnergyPlusData &state, Real64 &TmrHorizIRSky, Real64 &TmrSkyTemp, Real64 OpaqueSkyCover, Real64 DryBulb, Real64 DewPoint, Real64 RelHum, Real64 IRHoriz);
 
-    int validateWeatherDataNoErr(Real64 TDB, Real64 &TDP, Real64 RH, Real64 PB);
+    int validateWeatherDataNoErr(EnergyPlusData &state, Real64 TDB, Real64 &TDP, Real64 RH, Real64 PB);
 
 } // namespace WeatherManager
 

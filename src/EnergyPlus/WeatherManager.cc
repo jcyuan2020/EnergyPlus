@@ -8809,6 +8809,18 @@ namespace WeatherManager {
         Pv = RH_input * 0.01 * EnergyPlus::Psychrometrics::PsyPsatFnTemp(state, TDB);
         TDP_calc = EnergyPlus::Psychrometrics::PsyTsatFnPb_raw(state, Pv);
         
+        Real64 Press_temp(84793);
+        Real64 RH_temp(8);
+        Real64 TDB_temp(37.2);
+        Real64 Pv_temp(100);
+        Real64 TDP_temp(0);
+        Real64 HR_temp(0.001);
+        Real64 TWB_temp(0);
+        Pv_temp = RH_temp * 0.01 * EnergyPlus::Psychrometrics::PsyPsatFnTemp(state, TDB_temp);
+        TDP_temp = EnergyPlus::Psychrometrics::PsyTsatFnPb_raw(state, Pv_temp);
+        HR_temp = EnergyPlus::Psychrometrics::PsyWFnTdbRhPb(state, TDB_temp, RH_temp*0.01, Press_temp);
+        TWB_temp = EnergyPlus::Psychrometrics::PsyTwbFnTdbWPb(state, TDB_temp, HR_temp, Press_temp);
+
         // w = 0.62198 * Pv / (PB - Pv); 
         w = 0.621945 * Pv / (PB - Pv); 
         // Pdew = PB * w / (0.62198 + w);

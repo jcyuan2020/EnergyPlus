@@ -8797,7 +8797,7 @@ namespace WeatherManager {
         Real64 w;
         Real64 Pdew;
         Real64 TDP_calc;
-        Real64 err_tol(1e-1);
+        Real64 err_tol(1.0);
         int returnval(0);
 
         RH_input = RH;
@@ -8883,6 +8883,7 @@ namespace WeatherManager {
         if (TDP_calc < 0.0 || TDP_calc > 93.0 ) 
             TDP_calc = 6.09 + 12.608 * lnPv + 0.4959 * lnPv * lnPv;
 
+        // The tolorance may need some fine tuning to select a suitable one, currently set to 1C. 
         if (TDP_calc - TDP < -err_tol || TDP_calc - TDP > err_tol) {
             ShowWarningError(state, "Weather data check: Dew-Point temperature does not match. Reset using Relative Humidity derived value.");
             TDP = TDP_calc;

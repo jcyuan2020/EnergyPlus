@@ -8814,74 +8814,74 @@ namespace WeatherManager {
         Pv = RH_input * 0.01 * EnergyPlus::Psychrometrics::PsyPsatFnTemp(state, TDB);
         TDP_calc = EnergyPlus::Psychrometrics::PsyTsatFnPb_raw(state, Pv);
         
-        Real64 Press_temp(84793);
-        Real64 RH_temp(8);
-        Real64 TDB_temp(37.2);
-        Real64 Pv_temp(100);
-        Real64 TDP_temp(0);
-        Real64 HR_temp(0.001);
-        Real64 TWB_temp(0);
-        Pv_temp = RH_temp * 0.01 * EnergyPlus::Psychrometrics::PsyPsatFnTemp(state, TDB_temp);
-        TDP_temp = EnergyPlus::Psychrometrics::PsyTsatFnPb_raw(state, Pv_temp);
-        HR_temp = EnergyPlus::Psychrometrics::PsyWFnTdbRhPb(state, TDB_temp, RH_temp*0.01, Press_temp);
-        TWB_temp = EnergyPlus::Psychrometrics::PsyTwbFnTdbWPb(state, TDB_temp, HR_temp, Press_temp);
+        //Real64 Press_temp(84793);
+        //Real64 RH_temp(8);
+        //Real64 TDB_temp(37.2);
+        //Real64 Pv_temp(100);
+        //Real64 TDP_temp(0);
+        //Real64 HR_temp(0.001);
+        //Real64 TWB_temp(0);
+        //Pv_temp = RH_temp * 0.01 * EnergyPlus::Psychrometrics::PsyPsatFnTemp(state, TDB_temp);
+        //TDP_temp = EnergyPlus::Psychrometrics::PsyTsatFnPb_raw(state, Pv_temp);
+        //HR_temp = EnergyPlus::Psychrometrics::PsyWFnTdbRhPb(state, TDB_temp, RH_temp*0.01, Press_temp);
+        //TWB_temp = EnergyPlus::Psychrometrics::PsyTwbFnTdbWPb(state, TDB_temp, HR_temp, Press_temp);
 
-        // w = 0.62198 * Pv / (PB - Pv); 
-        w = 0.621945 * Pv / (PB - Pv); 
-        // Pdew = PB * w / (0.62198 + w);
-        Pdew = PB * w / (0.621945 + w);
-        TDP_calc = EnergyPlus::Psychrometrics::PsyTdpFnWPb(state, w, PB);
+        //// w = 0.62198 * Pv / (PB - Pv); 
+        //w = 0.621945 * Pv / (PB - Pv); 
+        //// Pdew = PB * w / (0.62198 + w);
+        //Pdew = PB * w / (0.621945 + w);
+        //TDP_calc = EnergyPlus::Psychrometrics::PsyTdpFnWPb(state, w, PB);
 
-        // test new algorithm 1
-        Real64 a = 17.62;
-        Real64 b = 243.12;
-        Real64 alpha = -1.0;
-        alpha = log(RH_input / 100.0) + a * TDB / (b + TDB);
-        TDP_calc = b * alpha / (a - alpha);
+        //// test new algorithm 1
+        //Real64 a = 17.62;
+        //Real64 b = 243.12;
+        //Real64 alpha = -1.0;
+        //alpha = log(RH_input / 100.0) + a * TDB / (b + TDB);
+        //TDP_calc = b * alpha / (a - alpha);
 
-        // test new algorithm 2
-        Real64 c1 = -5.6745359e1;
-        Real64 c2 = 6.3925247;
-        Real64 c3 = -9.6778430e-1;
-        Real64 c4 = 6.2215701e-3;
-        Real64 c5 = 2.0747825e-3;
-        Real64 c6 = -9.4840240e-5;
-        Real64 c7 = 4.1635019;
+        //// test new algorithm 2
+        //Real64 c1 = -5.6745359e1;
+        //Real64 c2 = 6.3925247;
+        //Real64 c3 = -9.6778430e-1;
+        //Real64 c4 = 6.2215701e-3;
+        //Real64 c5 = 2.0747825e-3;
+        //Real64 c6 = -9.4840240e-5;
+        //Real64 c7 = 4.1635019;
 
-        Real64 c8 = -5.8002206e1;
-        Real64 c9 = 1.3914993;
-        Real64 c10 = -4.8640239;
-        Real64 c11 = 4.1764768e-1;
-        Real64 c12 = -1.4452093e-2;
-        Real64 c13 = 6.5459673;
+        //Real64 c8 = -5.8002206e1;
+        //Real64 c9 = 1.3914993;
+        //Real64 c10 = -4.8640239;
+        //Real64 c11 = 4.1764768e-1;
+        //Real64 c12 = -1.4452093e-2;
+        //Real64 c13 = 6.5459673;
 
-        Real64 tdbc = TDB * 0.01 + 2.7315;
+        //Real64 tdbc = TDB * 0.01 + 2.7315;
 
-        Real64 lnpsat = 1000;
+        //Real64 lnpsat = 1000;
 
-        if (TDB < 0.0)
-            lnpsat = c1/tdbc + c2 + c3*tdbc + c4*tdbc*tdbc + c5*tdbc*tdbc*tdbc + c6*tdbc*tdbc*tdbc*tdbc + c7*log(TDB + 273.15);
-        else
-            lnpsat =
-                c8 / tdbc + c9 + c10 * tdbc + c11 * tdbc * tdbc + c12 * tdbc * tdbc * tdbc + c13 * log(TDB + 273.15);
+        //if (TDB < 0.0)
+        //    lnpsat = c1/tdbc + c2 + c3*tdbc + c4*tdbc*tdbc + c5*tdbc*tdbc*tdbc + c6*tdbc*tdbc*tdbc*tdbc + c7*log(TDB + 273.15);
+        //else
+        //    lnpsat =
+        //        c8 / tdbc + c9 + c10 * tdbc + c11 * tdbc * tdbc + c12 * tdbc * tdbc * tdbc + c13 * log(TDB + 273.15);
 
-        Real64 lnPv = 5;
+        //Real64 lnPv = 5;
 
-        lnPv = log(RH_input*0.01) + lnpsat;
-        
-        Real64 c14 = 6.54;
-        Real64 c15 = 14.526;
-        Real64 c16 = 0.7389;
-        Real64 c17 = 0.09486;
-        Real64 c18 = 0.4569; 
+        //lnPv = log(RH_input*0.01) + lnpsat;
+        //
+        //Real64 c14 = 6.54;
+        //Real64 c15 = 14.526;
+        //Real64 c16 = 0.7389;
+        //Real64 c17 = 0.09486;
+        //Real64 c18 = 0.4569; 
 
-        Pv = exp(lnPv);
-        lnPv = lnPv - 3.0 * log(10);
+        //Pv = exp(lnPv);
+        //lnPv = lnPv - 3.0 * log(10);
 
-        TDP_calc = c14 + c15 * lnPv + c16 * lnPv * lnPv + c17 * lnPv * lnPv * lnPv +
-                   c18 * pow(exp(lnPv), 0.1984);
-        if (TDP_calc < 0.0 || TDP_calc > 93.0 ) 
-            TDP_calc = 6.09 + 12.608 * lnPv + 0.4959 * lnPv * lnPv;
+        //TDP_calc = c14 + c15 * lnPv + c16 * lnPv * lnPv + c17 * lnPv * lnPv * lnPv +
+        //           c18 * pow(exp(lnPv), 0.1984);
+        //if (TDP_calc < 0.0 || TDP_calc > 93.0 ) 
+        //    TDP_calc = 6.09 + 12.608 * lnPv + 0.4959 * lnPv * lnPv;
 
         // The tolorance may need some fine tuning to select a suitable one, currently set to 1C. 
         if (TDP_calc - TDP < -err_tol || TDP_calc - TDP > err_tol) {

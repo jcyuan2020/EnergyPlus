@@ -3404,7 +3404,7 @@ Output:Meter:MeterFileOnly,NaturalGas:Plant,runperiod;
 
 OutputControl:Table:Style,
     HTML,                    !- Column Separator
-    InchPound;               !- Unit Conversion
+    JtoMJ;                   !- Unit Conversion
 
 Output:Table:SummaryReports,
     AllSummary;              !- Report 1 Name

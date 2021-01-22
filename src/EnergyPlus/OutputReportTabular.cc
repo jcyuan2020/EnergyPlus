@@ -4321,8 +4321,6 @@ namespace EnergyPlus::OutputReportTabular {
         using FluidCoolers::SimpleFluidCooler;
         using HeatingCoils::HeatingCoil;
         using HeatingCoils::NumHeatingCoils;
-        using MixedAir::NumOAControllers;
-        using MixedAir::OAController;
         using PackagedThermalStorageCoil::NumTESCoils;
         using PackagedThermalStorageCoil::TESCoil;
 
@@ -4341,8 +4339,8 @@ namespace EnergyPlus::OutputReportTabular {
         SysTotalHVACRejectHeatLoss = 0;
 
         // HVAC relief air
-        for (iOACtrl = 1; iOACtrl <= NumOAControllers; ++iOACtrl) {
-            SysTotalHVACReliefHeatLoss += OAController(iOACtrl).RelTotalLossRate * TimeStepSysSec;
+        for (iOACtrl = 1; iOACtrl <= state.dataMixedAir->NumOAControllers; ++iOACtrl) {
+            SysTotalHVACReliefHeatLoss += state.dataMixedAir->OAController(iOACtrl).RelTotalLossRate * TimeStepSysSec;
         }
 
         // Condenser water loop
@@ -5123,9 +5121,7 @@ namespace EnergyPlus::OutputReportTabular {
 
         if (ort->WriteTabularFiles) {
 
-            //iUnitsStyle unitsql_unitconv = iUnitsStyle::None;
-            ort->unitsStyle_SQLite = iUnitsStyle::None;
-            // if (unitsqltab == 5) unitsqltab = ort->unitsStyle; // This is the default UseOutputControlTableStyles
+            // ort->unitsStyle_SQLite = iUnitsStyle::None;
             if (unitSQLiteTable == 0) {
                 ort->unitsStyle_SQLite = iUnitsStyle::None;
             } else if (unitSQLiteTable == 1) {
@@ -5186,6 +5182,32 @@ namespace EnergyPlus::OutputReportTabular {
         print(state.files.audit, variable_fmt, "numTableEntry", state.dataOutRptPredefined->numTableEntry);
         print(state.files.audit, variable_fmt, "sizeCompSizeTableEntry", state.dataOutRptPredefined->sizeCompSizeTableEntry);
         print(state.files.audit, variable_fmt, "numCompSizeTableEntry", state.dataOutRptPredefined->numCompSizeTableEntry);
+    }
+
+    bool produceDualUnitsFlags(const int& iUnit_Sys, const iUnitsStyle& unitsStyle_Tab, const iUnitsStyle& unitsStyle_Sql, 
+        iUnitsStyle& unitsStyle_Cur, bool& produce_Tab, bool& produce_Sql)
+    {
+        bool brkflag = false;
+
+        if (iUnit_Sys == 0) {
+            unitsStyle_Cur = unitsStyle_Tab; 
+            produce_Tab = true;
+            if (unitsStyle_Sql == unitsStyle_Tab) {
+                produce_Sql = true;
+            } else {
+                produce_Sql = false;
+            }
+        } else { // iUnit_Sys == 1
+            unitsStyle_Cur = unitsStyle_Sql;
+            produce_Tab = false;
+            produce_Sql = true;
+            if (unitsStyle_Sql == unitsStyle_Tab) {
+                brkflag = true;
+                produce_Sql = false;
+            }
+        }
+
+        return brkflag;
     }
 
     void parseStatLine(const std::string &lineIn,
@@ -6339,26 +6361,11 @@ namespace EnergyPlus::OutputReportTabular {
 
         auto &ort(state.dataOutRptTab);
 
-        iUnitsStyle unitsStyle_cur = ort->unitsStyle;
-        bool produceTabular = true;
-        bool produceSQLite = false;
-
         for (int iUnitSystem = 0; iUnitSystem <= 1; iUnitSystem++) {
-
-            if (iUnitSystem == 0) {
-                unitsStyle_cur = ort->unitsStyle;
-                produceTabular = true;
-                if (ort->unitsStyle_SQLite == ort->unitsStyle) {
-                    produceSQLite = true;
-                } else {
-                    produceSQLite = false;
-                }
-            } else { // iUnitSystem == 1
-                unitsStyle_cur = ort->unitsStyle_SQLite;
-                produceTabular = false;
-                produceSQLite = true;
-                if (ort->unitsStyle_SQLite == ort->unitsStyle) break;
-            }
+            iUnitsStyle unitsStyle_cur = ort->unitsStyle;
+            bool produceTabular = true;
+            bool produceSQLite = false;
+            if (produceDualUnitsFlags(iUnitSystem, ort->unitsStyle, ort->unitsStyle_SQLite, unitsStyle_cur, produceTabular, produceSQLite)) break;
 
             // set the unit conversion
             // if (ort->unitsStyle == iUnitsStyle::None) {
@@ -6668,8 +6675,8 @@ namespace EnergyPlus::OutputReportTabular {
                         }
                     }
                     if (produceTabular) {
-                        if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                            ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(tableBody,
+                        if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                            state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(tableBody,
                                                                                                         rowHead,
                                                                                                         columnHead,
                                                                                                         ort->MonthlyInput(iInput).name,
@@ -6739,26 +6746,11 @@ namespace EnergyPlus::OutputReportTabular {
 
         auto &ort(state.dataOutRptTab);
 
-        iUnitsStyle unitsStyle_cur = ort->unitsStyle;
-        bool produceTabular = true;
-        bool produceSQLite = false;
-
         for (int iUnitSystem = 0; iUnitSystem <= 1; iUnitSystem++) {
-
-            if (iUnitSystem == 0) {
-                unitsStyle_cur = ort->unitsStyle;
-                produceTabular = true;
-                if (ort->unitsStyle_SQLite == ort->unitsStyle) {
-                    produceSQLite = true;
-                } else {
-                    produceSQLite = false;
-                }
-            } else { // iUnitSystem == 1
-                unitsStyle_cur = ort->unitsStyle_SQLite;
-                produceTabular = false;
-                produceSQLite = true;
-                if (ort->unitsStyle_SQLite == ort->unitsStyle) break;
-            }
+            iUnitsStyle unitsStyle_cur = ort->unitsStyle;
+            bool produceTabular = true;
+            bool produceSQLite = false;
+            if (produceDualUnitsFlags(iUnitSystem, ort->unitsStyle, ort->unitsStyle_SQLite, unitsStyle_cur, produceTabular, produceSQLite)) break;
 
             rowHead(1) = "Interval Start";
             rowHead(2) = "Interval End";
@@ -6913,8 +6905,8 @@ namespace EnergyPlus::OutputReportTabular {
                         }
                     }
                     if (produceTabular) {
-                        if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                            ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(tableBody,
+                        if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                            state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(tableBody,
                                                                                                         rowHead,
                                                                                                         columnHead,
                                                                                                         repNameWithUnitsandscheduleName,
@@ -6973,8 +6965,8 @@ namespace EnergyPlus::OutputReportTabular {
                         }
                     }
                     if (produceTabular) {
-                        if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                            ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(
+                        if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                            state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(
                                 tableBody, rowHead, columnHead, repNameWithUnitsandscheduleName, ort->BinObjVarID(repIndex).namesOfObj, "Statistics");
                         }
                     }
@@ -7105,26 +7097,12 @@ namespace EnergyPlus::OutputReportTabular {
                 WriteTextLine(state, "", true);
             }
 
-            iUnitsStyle unitsStyle_cur = ort->unitsStyle;
-            bool produceTabular = true;
-            bool produceSQLite = false;
-
             for (int iUnitSystem = 0; iUnitSystem <= 1; iUnitSystem++) {
-
-                if (iUnitSystem == 0) {
-                    unitsStyle_cur = ort->unitsStyle;
-                    produceTabular = true;
-                    if (ort->unitsStyle_SQLite == ort->unitsStyle) {
-                        produceSQLite = true;
-                    } else {
-                        produceSQLite = false;
-                    }
-                } else { // iUnitSystem == 1
-                    unitsStyle_cur = ort->unitsStyle_SQLite;
-                    produceTabular = false;
-                    produceSQLite = true;
-                    if (ort->unitsStyle_SQLite == ort->unitsStyle) break;
-                }
+                iUnitsStyle unitsStyle_cur = ort->unitsStyle;
+                bool produceTabular = true;
+                bool produceSQLite = false;
+                if (produceDualUnitsFlags(iUnitSystem, ort->unitsStyle, ort->unitsStyle_SQLite, unitsStyle_cur, produceTabular, produceSQLite))
+                    break;
 
                 // determine building floor areas
                 DetermineBuildingFloorArea(state);
@@ -7518,8 +7496,8 @@ namespace EnergyPlus::OutputReportTabular {
                         }
                     }
                     if (produceTabular) {
-                        if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                            ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(tableBody,
+                        if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                            state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(tableBody,
                                                                                                         rowHead,
                                                                                                         columnHead,
                                                                                                         "Annual Building Utility Performance Summary",
@@ -7681,8 +7659,8 @@ namespace EnergyPlus::OutputReportTabular {
                         }
                     }
                     if (produceTabular) {
-                        if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                            ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(tableBody,
+                        if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                            state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(tableBody,
                                                                                                         rowHead,
                                                                                                         columnHead,
                                                                                                         "Annual Building Utility Performance Summary",
@@ -7742,8 +7720,8 @@ namespace EnergyPlus::OutputReportTabular {
                         }
                     }
                     if (produceTabular) {
-                        if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                            ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(
+                        if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                            state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(
                                 tableBody, rowHead, columnHead, "Annual Building Utility Performance Summary", "Entire Facility", "Building Area");
                         }
                     }
@@ -8110,8 +8088,8 @@ namespace EnergyPlus::OutputReportTabular {
                         }
                     }
                     if (produceTabular) {
-                        if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                            ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(
+                        if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                            state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(
                                 tableBody, rowHead, columnHead, "Annual Building Utility Performance Summary", "Entire Facility", "End Uses");
                         }
                     }
@@ -8286,8 +8264,8 @@ namespace EnergyPlus::OutputReportTabular {
                         }
                     }
                     if (produceTabular) {
-                        if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                            ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(tableBodyTemp,
+                        if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                            state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(tableBodyTemp,
                                                                                                         rowHeadTemp,
                                                                                                         columnHeadTemp,
                                                                                                         "Annual Building Utility Performance Summary",
@@ -8484,8 +8462,8 @@ namespace EnergyPlus::OutputReportTabular {
                         }
                     }
                     if (produceTabular) {
-                        if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                            ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(tableBody,
+                        if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                            state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(tableBody,
                                                                                                         rowHead,
                                                                                                         columnHead,
                                                                                                         "Annual Building Utility Performance Summary",
@@ -8520,8 +8498,8 @@ namespace EnergyPlus::OutputReportTabular {
                         }
                     }
                     if (produceTabular) {
-                        if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                            ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(tableBody,
+                        if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                            state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(tableBody,
                                                                                                         rowHead,
                                                                                                         columnHead,
                                                                                                         "Annual Building Utility Performance Summary",
@@ -8624,8 +8602,8 @@ namespace EnergyPlus::OutputReportTabular {
                         }
                     }
                     if (produceTabular) {
-                        if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                            ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(tableBody,
+                        if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                            state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(tableBody,
                                                                                                         rowHead,
                                                                                                         columnHead,
                                                                                                         "Annual Building Utility Performance Summary",
@@ -8715,8 +8693,8 @@ namespace EnergyPlus::OutputReportTabular {
                         }
                     }
                     if (produceTabular) {
-                        if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                            ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(tableBody,
+                        if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                            state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(tableBody,
                                                                                                         rowHead,
                                                                                                         columnHead,
                                                                                                         "Annual Building Utility Performance Summary",
@@ -8821,8 +8799,8 @@ namespace EnergyPlus::OutputReportTabular {
                         }
                     }
                     if (produceTabular) {
-                        if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                            ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(tableBody,
+                        if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                            state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(tableBody,
                                                                                                         rowHead,
                                                                                                         columnHead,
                                                                                                         "Annual Building Utility Performance Summary",
@@ -8878,8 +8856,8 @@ namespace EnergyPlus::OutputReportTabular {
                         }
                     }
                     if (produceTabular) {
-                        if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                            ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(tableBody,
+                        if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                            state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(tableBody,
                                                                                                         rowHead,
                                                                                                         columnHead,
                                                                                                         "Annual Building Utility Performance Summary",
@@ -8940,8 +8918,8 @@ namespace EnergyPlus::OutputReportTabular {
                         }
                     }
                     if (produceTabular) {
-                        if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                            ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(tableBody,
+                        if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                            state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(tableBody,
                                                                                                         rowHead,
                                                                                                         columnHead,
                                                                                                         "Annual Building Utility Performance Summary",
@@ -9005,26 +8983,11 @@ namespace EnergyPlus::OutputReportTabular {
 
         if (ort->displaySourceEnergyEndUseSummary) {
             
-            iUnitsStyle unitsStyle_cur = ort->unitsStyle;
-            bool produceTabular = true;
-            bool produceSQLite = false;
-
             for (int iUnitSystem = 0; iUnitSystem <= 1; iUnitSystem++) {
-
-                if (iUnitSystem == 0) {
-                    unitsStyle_cur = ort->unitsStyle;
-                    produceTabular = true;
-                    if (ort->unitsStyle_SQLite == ort->unitsStyle) {
-                        produceSQLite = true;
-                    } else {
-                        produceSQLite = false;
-                    }
-                } else { // iUnitSystem == 1
-                    unitsStyle_cur = ort->unitsStyle_SQLite;
-                    produceTabular = false;
-                    produceSQLite = true;
-                    if (ort->unitsStyle_SQLite == ort->unitsStyle) break;
-                }
+                iUnitsStyle unitsStyle_cur = ort->unitsStyle;
+                bool produceTabular = true;
+                bool produceSQLite = false;
+                if (produceDualUnitsFlags(iUnitSystem, ort->unitsStyle, ort->unitsStyle_SQLite, unitsStyle_cur, produceTabular, produceSQLite)) break;
 
                 if (produceTabular) {
                     // show the headers of the report
@@ -9213,8 +9176,8 @@ namespace EnergyPlus::OutputReportTabular {
                     }
                 }
                 if (produceTabular) {
-                    if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                        ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(tableBody,
+                    if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                        state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(tableBody,
                                                                                                     rowHead,
                                                                                                     columnHead,
                                                                                                     "Source Energy End Use Components Summary",
@@ -9304,8 +9267,8 @@ namespace EnergyPlus::OutputReportTabular {
                         }
                     }
                     if (produceTabular) {
-                        if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                            ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(
+                        if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                            state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(
                                 tableBody,
                                 rowHead,
                                 columnHead,
@@ -9346,8 +9309,8 @@ namespace EnergyPlus::OutputReportTabular {
                         }
                     }
                     if (produceTabular) {
-                        if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                            ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(
+                        if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                            state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(
                                 tableBody,
                                 rowHead,
                                 columnHead,
@@ -9410,26 +9373,11 @@ namespace EnergyPlus::OutputReportTabular {
 
         if (ort->displayDemandEndUse) {
 
-            iUnitsStyle unitsStyle_cur = ort->unitsStyle;
-            bool produceTabular = true;
-            bool produceSQLite = false;
-
             for (int iUnitSystem = 0; iUnitSystem <= 1; iUnitSystem++) {
-                
-                if (iUnitSystem == 0) {
-                    unitsStyle_cur = ort->unitsStyle;
-                    produceTabular = true;
-                    if (ort->unitsStyle_SQLite == ort->unitsStyle) {
-                        produceSQLite = true;
-                    } else {
-                        produceSQLite = false;
-                    }
-                } else { // iUnitSystem == 1
-                    unitsStyle_cur = ort->unitsStyle_SQLite;
-                    produceTabular = false;
-                    produceSQLite = true;
-                    if (ort->unitsStyle_SQLite == ort->unitsStyle) break;
-                }
+                iUnitsStyle unitsStyle_cur = ort->unitsStyle;
+                bool produceTabular = true;
+                bool produceSQLite = false;
+                if (produceDualUnitsFlags(iUnitSystem, ort->unitsStyle, ort->unitsStyle_SQLite, unitsStyle_cur, produceTabular, produceSQLite)) break;                
 
                 // show the headers of the report
                 WriteReportHeaders(state, "Demand End Use Components Summary", "Entire Facility", OutputProcessor::StoreType::Averaged);
@@ -9692,8 +9640,8 @@ namespace EnergyPlus::OutputReportTabular {
                     }
                 }
                 if (produceTabular) {
-                    if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                        ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(
+                    if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                        state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(
                             tableBody, rowHead, columnHead, "Demand End Use Components Summary", "Entire Facility", "End Uses");
                     }
                 }
@@ -9826,8 +9774,8 @@ namespace EnergyPlus::OutputReportTabular {
                 }
 
                 if (produceTabular) {
-                    if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                        ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(tableBodyTemp,
+                    if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                        state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(tableBodyTemp,
                                                                                                     rowHeadTemp,
                                                                                                     columnHeadTemp,
                                                                                                     "Demand End Use Components Summary",
@@ -9966,26 +9914,11 @@ namespace EnergyPlus::OutputReportTabular {
 
         if (!state.dataCostEstimateManager->DoCostEstimate) return;
 
-        iUnitsStyle unitsStyle_cur = ort->unitsStyle;
-        bool produceTabular = true;
-        bool produceSQLite = false;
-
         for (int iUnitSystem = 0; iUnitSystem <= 1; iUnitSystem++) {
-
-            if (iUnitSystem == 0) {
-                unitsStyle_cur = ort->unitsStyle;
-                produceTabular = true;
-                if (ort->unitsStyle_SQLite == ort->unitsStyle) {
-                    produceSQLite = true;
-                } else {
-                    produceSQLite = false;
-                }
-            } else { // iUnitSystem == 1
-                unitsStyle_cur = ort->unitsStyle_SQLite;
-                produceTabular = false;
-                produceSQLite = true;
-                if (ort->unitsStyle_SQLite == ort->unitsStyle) break;
-            }
+            iUnitsStyle unitsStyle_cur = ort->unitsStyle;
+            bool produceTabular = true;
+            bool produceSQLite = false;
+            if (produceDualUnitsFlags(iUnitSystem, ort->unitsStyle, ort->unitsStyle_SQLite, unitsStyle_cur, produceTabular, produceSQLite)) break;
 
             if (produceTabular) {
                 WriteReportHeaders(state, "Component Cost Economics Summary", "Entire Facility", OutputProcessor::StoreType::Averaged);
@@ -10125,8 +10058,8 @@ namespace EnergyPlus::OutputReportTabular {
                 }
             }
             if (produceTabular) {
-                if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                    ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(tableBody,
+                if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                    state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(tableBody,
                                                                                                 rowHead,
                                                                                                 columnHead,
                                                                                                 "Construction Cost Estimate Summary",
@@ -10192,8 +10125,8 @@ namespace EnergyPlus::OutputReportTabular {
                 }
             }
             if (produceTabular) {
-                if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                    ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(
+                if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                    state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(
                         tableBody, rowHead, columnHead, "Construction Cost Estimate Summary", "Entire Facility", "Cost Line Item Details");
                 }
             }
@@ -10388,26 +10321,11 @@ namespace EnergyPlus::OutputReportTabular {
         // all arrays are in the format: (row, columnm)
         if (ort->displayTabularVeriSum) {
 
-            iUnitsStyle unitsStyle_cur = ort->unitsStyle;
-            bool produceTabular = true;
-            bool produceSQLite = false;
-
             for (int iUnitSystem = 0; iUnitSystem <= 1; iUnitSystem++) {
-
-                if (iUnitSystem == 0) {
-                    unitsStyle_cur = ort->unitsStyle;
-                    produceTabular = true;
-                    if (ort->unitsStyle_SQLite == ort->unitsStyle) {
-                        produceSQLite = true;
-                    } else {
-                        produceSQLite = false;
-                    }
-                } else { // iUnitSystem == 1
-                    unitsStyle_cur = ort->unitsStyle_SQLite;
-                    produceTabular = false;
-                    produceSQLite = true;
-                    if (ort->unitsStyle_SQLite == ort->unitsStyle) break;
-                }
+                iUnitsStyle unitsStyle_cur = ort->unitsStyle;
+                bool produceTabular = true;
+                bool produceSQLite = false;
+                if (produceDualUnitsFlags(iUnitSystem, ort->unitsStyle, ort->unitsStyle_SQLite, unitsStyle_cur, produceTabular, produceSQLite)) break;
 
                 // show the headers of the report
                 if (produceTabular) {
@@ -10502,8 +10420,8 @@ namespace EnergyPlus::OutputReportTabular {
                     }
                 }
                 if (produceTabular) {
-                    if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                        ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(
+                    if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                        state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(
                             tableBody, rowHead, columnHead, "Input Verification and Results Summary", "Entire Facility", "General");
                     }
                 }
@@ -10765,8 +10683,8 @@ namespace EnergyPlus::OutputReportTabular {
                     }
                 }
                 if (produceTabular) {
-                    if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                        ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(
+                    if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                        state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(
                             tableBody, rowHead, columnHead, "Input Verification and Results Summary", "Entire Facility", "Window-Wall Ratio");
                     }
                 }
@@ -10839,8 +10757,8 @@ namespace EnergyPlus::OutputReportTabular {
                     }
                 }
                 if (produceTabular) {
-                    if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                        ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(tableBody,
+                    if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                        state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(tableBody,
                                                                                                     rowHead,
                                                                                                     columnHead,
                                                                                                     "Input Verification and Results Summary",
@@ -10885,8 +10803,8 @@ namespace EnergyPlus::OutputReportTabular {
                     }
                 }
                 if (produceTabular) {
-                    if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                        ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(
+                    if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                        state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(
                             tableBody, rowHead, columnHead, "Input Verification and Results Summary", "Entire Facility", "Skylight-Roof Ratio");
                     }
                 }
@@ -11166,8 +11084,8 @@ namespace EnergyPlus::OutputReportTabular {
                     }
                 }
                 if (produceTabular) {
-                    if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                        ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(
+                    if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                        state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(
                             tableBody, rowHead, columnHead, "Input Verification and Results Summary", "Entire Facility", "Zone Summary");
                     }
                 }
@@ -11264,8 +11182,8 @@ namespace EnergyPlus::OutputReportTabular {
             if (sqlite) {
                 sqlite->createSQLiteTabularDataRecords(tableBody, rowHead, columnHead, "AdaptiveComfortReport", "Entire Facility", "People Summary");
             }
-            if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(
+            if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(
                     tableBody, rowHead, columnHead, "Adaptive Comfort Report", "Entire Facility", "People Summary");
             }
         }
@@ -11475,27 +11393,12 @@ namespace EnergyPlus::OutputReportTabular {
         auto &ort(state.dataOutRptTab);
 
         if (state.dataOutRptTab->displayHeatEmissionsSummary) {
- 
-            iUnitsStyle unitsStyle_cur = ort->unitsStyle;
-            bool produceTabular = true;
-            bool produceSQLite = false;
 
             for (int iUnitSystem = 0; iUnitSystem <= 1; iUnitSystem++) {
-
-                if (iUnitSystem == 0) {
-                    unitsStyle_cur = ort->unitsStyle;
-                    produceTabular = true;
-                    if (ort->unitsStyle_SQLite == ort->unitsStyle) {
-                        produceSQLite = true;
-                    } else {
-                        produceSQLite = false;
-                    }
-                } else { // iUnitSystem == 1
-                    unitsStyle_cur = ort->unitsStyle_SQLite;
-                    produceTabular = false;
-                    produceSQLite = true;
-                    if (ort->unitsStyle_SQLite == ort->unitsStyle) break;
-                }
+                iUnitsStyle unitsStyle_cur = ort->unitsStyle;
+                bool produceTabular = true;
+                bool produceSQLite = false;
+                if (produceDualUnitsFlags(iUnitSystem, ort->unitsStyle, ort->unitsStyle_SQLite, unitsStyle_cur, produceTabular, produceSQLite)) break;
 
                 if (produceTabular) {
                     WriteReportHeaders(state, "Annual Heat Emissions Summary", "Entire Facility", OutputProcessor::StoreType::Averaged);
@@ -11616,26 +11519,11 @@ namespace EnergyPlus::OutputReportTabular {
         Real64 IPvalue;
         auto &ort(state.dataOutRptTab);
 
-        iUnitsStyle unitsStyle_cur = ort->unitsStyle;
-        bool produceTabular = true;
-        bool produceSQLite = false;
-
         for (int iUnitSystem = 0; iUnitSystem <= 1; iUnitSystem++) {
-
-            if (iUnitSystem == 0) {
-                unitsStyle_cur = ort->unitsStyle;
-                produceTabular = true;
-                if (ort->unitsStyle_SQLite == ort->unitsStyle) {
-                    produceSQLite = true;
-                } else {
-                    produceSQLite = false;
-                }
-            } else { // iUnitSystem == 1
-                unitsStyle_cur = ort->unitsStyle_SQLite;
-                produceTabular = false;
-                produceSQLite = true;
-                if (ort->unitsStyle_SQLite == ort->unitsStyle) break;
-            }
+            iUnitsStyle unitsStyle_cur = ort->unitsStyle;
+            bool produceTabular = true;
+            bool produceSQLite = false;
+            if (produceDualUnitsFlags(iUnitSystem, ort->unitsStyle, ort->unitsStyle_SQLite, unitsStyle_cur, produceTabular, produceSQLite)) break;
 
             // loop through the entries and associate them with the subtable and create
             // list of unique object names
@@ -11819,8 +11707,8 @@ namespace EnergyPlus::OutputReportTabular {
                                 }
                             }
                             if (produceTabular) {
-                                if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                                    ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(
+                                if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                                    state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(
                                         tableBody,
                                         rowHead,
                                         columnHead,
@@ -11886,26 +11774,11 @@ namespace EnergyPlus::OutputReportTabular {
 
         if (ort->displayComponentSizing) {
 
-            iUnitsStyle unitsStyle_cur = ort->unitsStyle;
-            bool produceTabular = true;
-            bool produceSQLite = false;
-
             for (int iUnitSystem = 0; iUnitSystem <= 1; iUnitSystem++) {
-
-                if (iUnitSystem == 0) {
-                    unitsStyle_cur = ort->unitsStyle;
-                    produceTabular = true;
-                    if (ort->unitsStyle_SQLite == ort->unitsStyle) {
-                        produceSQLite = true;
-                    } else {
-                        produceSQLite = false;
-                    }
-                } else { // iUnitSystem == 1
-                    unitsStyle_cur = ort->unitsStyle_SQLite;
-                    produceTabular = false;
-                    produceSQLite = true;
-                    if (ort->unitsStyle_SQLite == ort->unitsStyle) break;
-                }
+                iUnitsStyle unitsStyle_cur = ort->unitsStyle;
+                bool produceTabular = true;
+                bool produceSQLite = false;
+                if (produceDualUnitsFlags(iUnitSystem, ort->unitsStyle, ort->unitsStyle_SQLite, unitsStyle_cur, produceTabular, produceSQLite)) break;
 
                 if (produceTabular) {
                     WriteReportHeaders(state, "Component Sizing Summary", "Entire Facility", OutputProcessor::StoreType::Averaged);
@@ -12089,8 +11962,8 @@ namespace EnergyPlus::OutputReportTabular {
                         }
                     }
                     if (produceTabular) {
-                        if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                            ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(
+                        if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                            state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(
                                 tableBody,
                                 rowHead,
                                 columnHead,
@@ -12237,8 +12110,8 @@ namespace EnergyPlus::OutputReportTabular {
                                                                "Entire Facility",
                                                                "Surfaces (Walls, Roofs, etc) that may be Shadowed by Other Surfaces");
                     }
-                    if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                        ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(
+                    if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                        state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(
                             tableBody,
                             rowHead,
                             columnHead,
@@ -12256,8 +12129,8 @@ namespace EnergyPlus::OutputReportTabular {
                                                                "Entire Facility",
                                                                "Subsurfaces (Windows and Doors) that may be Shadowed by Surfaces");
                     }
-                    if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                        ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(
+                    if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                        state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(
                             tableBody,
                             rowHead,
                             columnHead,
@@ -12303,26 +12176,11 @@ namespace EnergyPlus::OutputReportTabular {
                 }
             }
 
-            iUnitsStyle unitsStyle_cur = ort->unitsStyle;
-            bool produceTabular = true;
-            bool produceSQLite = false;
-
             for (int iUnitSystem = 0; iUnitSystem <= 1; iUnitSystem++) {
-
-                if (iUnitSystem == 0) {
-                    unitsStyle_cur = ort->unitsStyle;
-                    produceTabular = true;
-                    if (ort->unitsStyle_SQLite == ort->unitsStyle) {
-                        produceSQLite = true;
-                    } else {
-                        produceSQLite = false;
-                    }
-                } else { // iUnitSystem == 1
-                    unitsStyle_cur = ort->unitsStyle_SQLite;
-                    produceTabular = false;
-                    produceSQLite = true;
-                    if (ort->unitsStyle_SQLite == ort->unitsStyle) break;
-                }
+                iUnitsStyle unitsStyle_cur = ort->unitsStyle;
+                bool produceTabular = true;
+                bool produceSQLite = false;
+                if (produceDualUnitsFlags(iUnitSystem, ort->unitsStyle, ort->unitsStyle_SQLite, unitsStyle_cur, produceTabular, produceSQLite)) break;
 
                 // now go through each header and create a report for each one
                 for (auto headerLine : headerLines) {
@@ -12467,7 +12325,6 @@ namespace EnergyPlus::OutputReportTabular {
 
         // Using/Aliasing
         using DataHeatBalance::Zone;
-        using DataZoneEquipment::ZoneEquipConfig;
 
         // Locals
         // SUBROUTINE ARGUMENT DEFINITIONS:
@@ -12490,7 +12347,7 @@ namespace EnergyPlus::OutputReportTabular {
         if (state.dataGlobal->CompLoadReportIsReq) {
             if (ort->displayZoneComponentLoadSummary) {
                 for (iZone = 1; iZone <= state.dataGlobal->NumOfZones; ++iZone) {
-                    if (!ZoneEquipConfig(iZone).IsControlled) continue;
+                    if (!state.dataZoneEquip->ZoneEquipConfig(iZone).IsControlled) continue;
                     AddTOCEntry(state, "Zone Component Load Summary", Zone(iZone).Name);
                 }
             }
@@ -12686,7 +12543,6 @@ namespace EnergyPlus::OutputReportTabular {
         using DataSizing::CalcFinalZoneSizing;
         using DataSurfaces::Surface;
         using DataSurfaces::TotSurfaces;
-        using DataZoneEquipment::ZoneEquipConfig;
 
         // Locals
         // SUBROUTINE ARGUMENT DEFINITIONS:
@@ -12715,7 +12571,7 @@ namespace EnergyPlus::OutputReportTabular {
         for (SurfNum = 1; SurfNum <= TotSurfaces; ++SurfNum) {
             ZoneNum = Surface(SurfNum).Zone;
             if (ZoneNum == 0) continue;
-            if (!ZoneEquipConfig(ZoneNum).IsControlled) continue;
+            if (!state.dataZoneEquip->ZoneEquipConfig(ZoneNum).IsControlled) continue;
             CoolDesSelected = CalcFinalZoneSizing(ZoneNum).CoolDDNum;
             // loop over timesteps after pulse occurred
             if (CoolDesSelected != 0) {
@@ -12821,7 +12677,6 @@ namespace EnergyPlus::OutputReportTabular {
         using DataSurfaces::SurfWinGainConvGlazToZoneRep;
         using DataSurfaces::SurfWinGainConvShadeToZoneRep;
         using DataSurfaces::SurfWinGainFrameDividerToZoneRep;
-        using DataZoneEquipment::ZoneEquipConfig;
 
         // Locals
         // SUBROUTINE ARGUMENT DEFINITIONS:
@@ -13021,7 +12876,6 @@ namespace EnergyPlus::OutputReportTabular {
         using DataSizing::CalcFinalZoneSizing;
         using DataSizing::SysSizPeakDDNum;
         using DataSurfaces::TotSurfaces;
-        using DataZoneEquipment::ZoneEquipConfig;
         auto &ort(state.dataOutRptTab);
 
         if (!((ort->displayZoneComponentLoadSummary || ort->displayAirLoopComponentLoadSummary || ort->displayFacilityComponentLoadSummary) && state.dataGlobal->CompLoadReportIsReq))
@@ -13065,26 +12919,11 @@ namespace EnergyPlus::OutputReportTabular {
 
         CompLoadTablesType curCompLoadTable; // active component load table
 
-        iUnitsStyle unitsStyle_cur = ort->unitsStyle;
-        bool produceTabular = true;
-        bool produceSQLite = false;
-
         for (int iUnitSystem = 0; iUnitSystem <= 1; iUnitSystem++) {
-
-            if (iUnitSystem == 0) {
-                unitsStyle_cur = ort->unitsStyle;
-                produceTabular = true;
-                if (ort->unitsStyle_SQLite == ort->unitsStyle) {
-                    produceSQLite = true;
-                } else {
-                    produceSQLite = false;
-                }
-            } else { // iUnitSystem == 1
-                unitsStyle_cur = ort->unitsStyle_SQLite;
-                produceTabular = false;
-                produceSQLite = true;
-                if (ort->unitsStyle_SQLite == ort->unitsStyle) break;
-            }
+            iUnitsStyle unitsStyle_cur = ort->unitsStyle;
+            bool produceTabular = true;
+            bool produceSQLite = false;
+            if (produceDualUnitsFlags(iUnitSystem, ort->unitsStyle, ort->unitsStyle_SQLite, unitsStyle_cur, produceTabular, produceSQLite)) break;
 
             // adjusted initilization location to after variable declaration for loops 2021-01-11
             peopleDelaySeqHeat.dimension(state.dataGlobal->NumOfTimeStepInHour * 24, 0.0);
@@ -13202,7 +13041,7 @@ namespace EnergyPlus::OutputReportTabular {
             // ZoneComponentLoadSummary
             if (ort->displayZoneComponentLoadSummary) {
                 for (int iZone = 1; iZone <= state.dataGlobal->NumOfZones; ++iZone) {
-                    if (!ZoneEquipConfig(iZone).IsControlled) continue;
+                    if (!state.dataZoneEquip->ZoneEquipConfig(iZone).IsControlled) continue;
                     if (allocated(CalcFinalZoneSizing)) {
                         coolDesSelected = CalcFinalZoneSizing(iZone).CoolDDNum;
                         ZoneCoolCompLoadTables(iZone).desDayNum = coolDesSelected;
@@ -13355,7 +13194,7 @@ namespace EnergyPlus::OutputReportTabular {
                     // now go through the zones and if design day and time of max match the previously calculated zone results use those otherwise
                     // compute them for specific design day and time of max
                     for (int iZone = 1; iZone <= state.dataGlobal->NumOfZones; ++iZone) {
-                        if (!ZoneEquipConfig(iZone).IsControlled) continue;
+                        if (!state.dataZoneEquip->ZoneEquipConfig(iZone).IsControlled) continue;
                         // The ZoneCoolCompLoadTables already hasn't gotten a potential IP conversion yet, so we won't convert it twice.
                         if (ort->displayZoneComponentLoadSummary &&
                             (AirLoopZonesCoolCompLoadTables(iZone).desDayNum == ZoneCoolCompLoadTables(iZone).desDayNum) &&
@@ -13468,7 +13307,7 @@ namespace EnergyPlus::OutputReportTabular {
 
                     // OutputCompLoadSummary(
                        // state, iOutputType::airLoopOutput, AirLoopCoolCompLoadTables(iAirLoop), AirLoopHeatCompLoadTables(iAirLoop), iAirLoop);
-                    // JY 2021-01-17 Use the new version for dual units
+                    // JY 2021-01-17 Use the new version with additional parameters for dual units
                     OutputCompLoadSummary(
                         state, iOutputType::airLoopOutput, AirLoopCoolCompLoadTables(iAirLoop), AirLoopHeatCompLoadTables(iAirLoop), iAirLoop, unitsStyle_cur, produceTabular, produceSQLite);
                 }
@@ -13484,7 +13323,7 @@ namespace EnergyPlus::OutputReportTabular {
                 timeHeatMax = CalcFinalFacilitySizing.TimeStepNumAtHeatMax;
 
                 for (int iZone = 1; iZone <= state.dataGlobal->NumOfZones; ++iZone) {
-                    if (!ZoneEquipConfig(iZone).IsControlled) continue;
+                    if (!state.dataZoneEquip->ZoneEquipConfig(iZone).IsControlled) continue;
                     mult = Zone(iZone).Multiplier * Zone(iZone).ListMultiplier;
                     if (mult == 0.0) mult = 1.0;
                     // The ZoneCoolCompLoadTables already hasn't gotten a potential IP conversion yet, so we won't convert it twice.
@@ -13587,7 +13426,7 @@ namespace EnergyPlus::OutputReportTabular {
             // ZoneComponentLoadSummary: Now we convert and Display
             if (ort->displayZoneComponentLoadSummary) {
                 for (int iZone = 1; iZone <= state.dataGlobal->NumOfZones; ++iZone) {
-                    if (!ZoneEquipConfig(iZone).IsControlled) continue;
+                    if (!state.dataZoneEquip->ZoneEquipConfig(iZone).IsControlled) continue;
                     if (allocated(CalcFinalZoneSizing)) {
                         // LoadSummaryUnitConversion(state, ZoneCoolCompLoadTables(iZone));
                         // JY 2021-01-12 Use the reloaded version instead for dual units adaption
@@ -14413,7 +14252,7 @@ namespace EnergyPlus::OutputReportTabular {
         }
     }
 
-    // JY 2020-01-11 Do a Reload on this function for Dual Units
+    // JY 2021-01-12 reloaded with addtional parameters for dual units; did the reload since the original was used in an existing unit test
     // apply unit conversions to the load components summary tables
     void LoadSummaryUnitConversion(EnergyPlusData &state, CompLoadTablesType &compLoadTotal, iUnitsStyle unitsStyle_para)
     {
@@ -14485,6 +14324,7 @@ namespace EnergyPlus::OutputReportTabular {
         }
     }
 
+    //JY 2021-01-12: Added additional parameters to deal with dual units
     // provide output from the load component summary tables
     void OutputCompLoadSummary(EnergyPlusData &state,
                                iOutputType const &kind,
@@ -14618,8 +14458,8 @@ namespace EnergyPlus::OutputReportTabular {
                     }
                 }
                 if (produceTabular_para) {
-                    if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                        ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(
+                    if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                        state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(
                             tableBody, rowHead, columnHead, reportName, zoneAirLoopFacilityName, peakLoadCompName);
                     }
                 }
@@ -14707,8 +14547,8 @@ namespace EnergyPlus::OutputReportTabular {
                     }
                 }
                 if (produceTabular_para) {
-                    if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                        ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(
+                    if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                        state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(
                             tableBody, rowHead, columnHead, reportName, zoneAirLoopFacilityName, peakCondName);
                     }
                 }
@@ -14763,8 +14603,8 @@ namespace EnergyPlus::OutputReportTabular {
                     }
                 }
                 if (produceTabular_para) {
-                    if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                        ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(
+                    if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                        state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(
                             tableBody, rowHead, columnHead, reportName, zoneAirLoopFacilityName, engineeringCheckName);
                     }
                 }
@@ -14804,8 +14644,8 @@ namespace EnergyPlus::OutputReportTabular {
                         }
                     }
                     if (produceTabular_para) {
-                        if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-                            ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(
+                        if (state.dataResultsFramework->resultsFramework->timeSeriesAndTabularEnabled()) {
+                            state.dataResultsFramework->resultsFramework->TabularReportsCollection.addReportTable(
                                 tableBody, rowHead, columnHead, reportName, zoneAirLoopFacilityName, zonesIncludedName);
                         }
                     }
@@ -14813,337 +14653,6 @@ namespace EnergyPlus::OutputReportTabular {
             }
         }
     }
-
-    //    // provide output from the load component summary tables
-    //void OutputCompLoadSummary(EnergyPlusData &state,
-    //                           iOutputType const &kind,
-    //                           CompLoadTablesType const &compLoadCool,
-    //                           CompLoadTablesType const &compLoadHeat,
-    //                           int const &zoneOrAirLoopIndex,
-    //                           iUnitsStyle unitsStyle_para, 
-    //    bool produceSQLite_para)
-    //{
-    //    CompLoadTablesType curCompLoad;
-    //    bool writeOutput;
-    //    Array1D_string columnHead;
-    //    Array1D_int columnWidth;
-    //    Array1D_string rowHead;
-    //    Array2D_string tableBody; //(row, column)
-
-    //    std::string reportName;
-    //    std::string zoneAirLoopFacilityName;
-
-    //    auto &ort(state.dataOutRptTab);
-
-    //    if (kind == iOutputType::zoneOutput && ort->displayZoneComponentLoadSummary) {
-    //        reportName = "Zone Component Load Summary";
-    //        zoneAirLoopFacilityName = Zone(zoneOrAirLoopIndex).Name;
-    //        writeOutput = true;
-    //    } else if (kind == iOutputType::airLoopOutput && ort->displayAirLoopComponentLoadSummary) {
-    //        reportName = "AirLoop Component Load Summary";
-    //        zoneAirLoopFacilityName = DataSizing::FinalSysSizing(zoneOrAirLoopIndex).AirPriLoopName;
-    //        writeOutput = true;
-    //    } else if (kind == iOutputType::facilityOutput && ort->displayFacilityComponentLoadSummary) {
-    //        reportName = "Facility Component Load Summary";
-    //        zoneAirLoopFacilityName = "Facility";
-    //        writeOutput = true;
-    //    } else {
-    //        writeOutput = false;
-    //    }
-    //    if (writeOutput) {
-    //        if (!produceSQLite_para) {
-    //            WriteReportHeaders(state, reportName, zoneAirLoopFacilityName, OutputProcessor::StoreType::Averaged);
-    //        }
-    //        std::string peakLoadCompName;
-    //        std::string peakCondName;
-    //        std::string zonesIncludedName;
-    //        std::string engineeringCheckName;
-    //        for (int coolHeat = 1; coolHeat <= 2; ++coolHeat) {
-    //            tableBody.allocate(cPerArea, rGrdTot);
-    //            tableBody = "";
-    //            if (coolHeat == 1) {
-    //                curCompLoad = compLoadCool;
-    //                peakLoadCompName = "Estimated Cooling Peak Load Components";
-    //                peakCondName = "Cooling Peak Conditions";
-    //                zonesIncludedName = "Zones Included for Cooling";
-    //                engineeringCheckName = "Engineering Checks for Cooling";
-    //            } else {
-    //                curCompLoad = compLoadHeat;
-    //                peakLoadCompName = "Estimated Heating Peak Load Components";
-    //                peakCondName = "Heating Peak Conditions";
-    //                zonesIncludedName = "Zones Included for Heating";
-    //                engineeringCheckName = "Engineering Checks for Heating";
-    //            }
-    //            // move number array into string array
-    //            for (int c = 1; c <= cPerArea; ++c) {
-    //                for (int r = 1; r <= rGrdTot; ++r) { // to last row before total
-    //                    if (curCompLoad.cellUsed(c, r)) {
-    //                        tableBody(c, r) = RealToStr(curCompLoad.cells(c, r), 2);
-    //                    }
-    //                }
-    //            }
-    //            rowHead.allocate(rGrdTot);
-    //            // internal gains
-    //            rowHead(rPeople) = "People";
-    //            rowHead(rLights) = "Lights";
-    //            rowHead(rEquip) = "Equipment";
-    //            rowHead(rRefrig) = "Refrigeration Equipment";
-    //            rowHead(rWaterUse) = "Water Use Equipment";
-    //            rowHead(rPowerGen) = "Power Generation Equipment";
-    //            rowHead(rHvacLoss) = "HVAC Equipment Losses";
-    //            rowHead(rRefrig) = "Refrigeration";
-    //            // misc
-    //            rowHead(rDOAS) = "DOAS Direct to Zone";
-    //            rowHead(rInfil) = "Infiltration";
-    //            rowHead(rZoneVent) = "Zone Ventilation";
-    //            rowHead(rIntZonMix) = "Interzone Mixing";
-    //            // opaque surfaces
-    //            rowHead(rRoof) = "Roof";
-    //            rowHead(rIntZonCeil) = "Interzone Ceiling";
-    //            rowHead(rOtherRoof) = "Other Roof";
-    //            rowHead(rExtWall) = "Exterior Wall";
-    //            rowHead(rIntZonWall) = "Interzone Wall";
-    //            rowHead(rGrdWall) = "Ground Contact Wall";
-    //            rowHead(rOtherWall) = "Other Wall";
-    //            rowHead(rExtFlr) = "Exterior Floor";
-    //            rowHead(rIntZonFlr) = "Interzone Floor";
-    //            rowHead(rGrdFlr) = "Ground Contact Floor";
-    //            rowHead(rOtherFlr) = "Other Floor";
-    //            // subsurfaces
-    //            rowHead(rFeneCond) = "Fenestration Conduction";
-    //            rowHead(rFeneSolr) = "Fenestration Solar";
-    //            rowHead(rOpqDoor) = "Opaque Door";
-    //            rowHead(rGrdTot) = "Grand Total";
-
-    //            columnHead.allocate(cPerArea);
-    //            // if (ort->unitsStyle != iUnitsStyle::InchPound) {
-    //            if (unitsStyle_para != iUnitsStyle::InchPound) {
-    //                    columnHead(cSensInst) = "Sensible - Instant [W]";
-    //                columnHead(cSensDelay) = "Sensible - Delayed [W]";
-    //                columnHead(cSensRA) = "Sensible - Return Air [W]";
-    //                columnHead(cLatent) = "Latent [W]";
-    //                columnHead(cTotal) = "Total [W]";
-    //                columnHead(cPerc) = "%Grand Total";
-    //                columnHead(cArea) = "Related Area [m2]";
-    //                columnHead(cPerArea) = "Total per Area [W/m2]";
-
-    //            } else {
-    //                columnHead(cSensInst) = "Sensible - Instant [Btu/h]";
-    //                columnHead(cSensDelay) = "Sensible - Delayed [Btu/h]";
-    //                columnHead(cSensRA) = "Sensible - Return Air [Btu/h]";
-    //                columnHead(cLatent) = "Latent [Btu/h]";
-    //                columnHead(cTotal) = "Total [Btu/h]";
-    //                columnHead(cPerc) = "%Grand Total";
-    //                columnHead(cArea) = "Related Area [ft2]";
-    //                columnHead(cPerArea) = "Total per Area [Btu/h-ft2]";
-    //            }
-    //            columnWidth.dimension(cPerArea, 14); // array assignment - same for all columns
-
-    //            if (!produceSQLite_para) {
-    //                WriteSubtitle(state, peakLoadCompName);
-    //                WriteTable(state, tableBody, rowHead, columnHead, columnWidth);
-    //            }
-    //            if (produceSQLite_para) {
-    //                if (sqlite) {
-    //                    sqlite->createSQLiteTabularDataRecords(tableBody, rowHead, columnHead, reportName, zoneAirLoopFacilityName, peakLoadCompName);
-    //                }
-    //            }
-    //            if (!produceSQLite_para) {
-    //                if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-    //                    ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(
-    //                        tableBody, rowHead, columnHead, reportName, zoneAirLoopFacilityName, peakLoadCompName);
-    //                }
-    //            }
-
-    //            //---- Peak Conditions
-
-    //            rowHead.allocate(16);
-    //            columnHead.allocate(1);
-    //            columnWidth.allocate(1);
-    //            columnWidth = 14; // array assignment - same for all columns
-
-    //            tableBody.allocate(1, 16);
-    //            tableBody = "";
-
-    //            columnHead(1) = "Value";
-    //            // if (ort->unitsStyle != iUnitsStyle::InchPound) {
-    //            if (unitsStyle_para != iUnitsStyle::InchPound) {
-    //                rowHead(1) = "Time of Peak Load";
-    //                rowHead(2) = "Outside Dry Bulb Temperature [C]";
-    //                rowHead(3) = "Outside Wet Bulb Temperature [C]";
-    //                rowHead(4) = "Outside Humidity Ratio at Peak [kgWater/kgDryAir]";
-    //                rowHead(5) = "Zone Dry Bulb Temperature [C]";
-    //                rowHead(6) = "Zone Relative Humidity [%]";
-    //                rowHead(7) = "Zone Humidity Ratio at Peak [kgWater/kgDryAir]";
-
-    //                rowHead(8) = "Supply Air Temperature [C]";
-    //                rowHead(9) = "Mixed Air Temperature [C]";
-    //                rowHead(10) = "Main Fan Air Flow [m3/s]";
-    //                rowHead(11) = "Outside Air Flow [m3/s]";
-    //                rowHead(12) = "Peak Sensible Load with Sizing Factor [W]";
-    //                rowHead(13) = "Difference Due to Sizing Factor [W]";
-
-    //                rowHead(14) = "Peak Sensible Load [W]";
-    //                rowHead(15) = "Estimated Instant + Delayed Sensible Load [W]";
-    //                rowHead(16) = "Difference Between Peak and Estimated Sensible Load [W]";
-    //            } else {
-    //                rowHead(1) = "Time of Peak Load";
-    //                rowHead(2) = "Outside Dry Bulb Temperature [F]";
-    //                rowHead(3) = "Outside Wet Bulb Temperature [F]";
-    //                rowHead(4) = "Outside Humidity Ratio at Peak [lbWater/lbAir]";
-    //                rowHead(5) = "Zone Dry Bulb Temperature [F]";
-    //                rowHead(6) = "Zone Relative Humidity [%]";
-    //                rowHead(7) = "Zone Humidity Ratio at Peak [lbWater/lbAir]";
-
-    //                rowHead(8) = "Supply Air Temperature [F]";
-    //                rowHead(9) = "Mixed Air Temperature [F]";
-    //                rowHead(10) = "Main Fan Air Flow [ft3/min]";
-    //                rowHead(11) = "Outside Air Flow [ft3/min]";
-    //                rowHead(12) = "Peak Sensible Load with Sizing Factor [Btu/h]";
-    //                rowHead(13) = "Difference Due to Sizing Factor [Btu/h]";
-
-    //                rowHead(14) = "Peak Sensible Load  [Btu/h]";
-    //                rowHead(15) = "Estimated Instant + Delayed Sensible Load [Btu/h]";
-    //                rowHead(16) = "Difference Between Peak and Estimated Sensible Load [Btu/h]";
-    //            }
-
-    //            if (curCompLoad.timeStepMax != 0) {
-    //                tableBody(1, 1) = curCompLoad.peakDateHrMin;                  // Time of Peak Load
-    //                tableBody(1, 2) = RealToStr(curCompLoad.outsideDryBulb, 2);   // Outside Dry Bulb Temperature
-    //                tableBody(1, 3) = RealToStr(curCompLoad.outsideWetBulb, 2);   // Outside Wet Bulb Temperature
-    //                tableBody(1, 4) = RealToStr(curCompLoad.outsideHumRatio, 5);  // Outside Humidity Ratio at Peak
-    //                tableBody(1, 5) = RealToStr(curCompLoad.zoneDryBulb, 2);      // Zone Dry Bulb Temperature
-    //                tableBody(1, 6) = RealToStr(100 * curCompLoad.zoneRelHum, 2); // Zone Relative Humdity
-    //                tableBody(1, 7) = RealToStr(curCompLoad.zoneHumRatio, 5);     // Zone Humidity Ratio at Peak
-    //            }
-    //            tableBody(1, 8) = RealToStr(curCompLoad.supAirTemp, 2); // supply air temperature
-    //            if (kind == iOutputType::airLoopOutput) {
-    //                tableBody(1, 9) = RealToStr(curCompLoad.mixAirTemp, 2); // mixed air temperature - not for zone or facility
-    //            }
-    //            tableBody(1, 10) = RealToStr(curCompLoad.mainFanAirFlow, 2);     // main fan air flow
-    //            tableBody(1, 11) = RealToStr(curCompLoad.outsideAirFlow, 2);     // outside air flow
-    //            tableBody(1, 12) = RealToStr(curCompLoad.designPeakLoad, 2);     // design peak load
-    //            tableBody(1, 13) = RealToStr(curCompLoad.diffDesignPeak, 2);     // difference between Design and Peak Load
-    //            tableBody(1, 14) = RealToStr(curCompLoad.peakDesSensLoad, 2);    // Peak Design Sensible Load
-    //            tableBody(1, 15) = RealToStr(curCompLoad.estInstDelSensLoad, 2); // Estimated Instant + Delayed Sensible Load
-    //            tableBody(1, 16) = RealToStr(curCompLoad.diffPeakEst, 2);        // Difference
-
-    //            if (!produceSQLite_para) {
-    //                WriteSubtitle(state, peakCondName);
-    //                WriteTable(state, tableBody, rowHead, columnHead, columnWidth);
-    //            }
-    //            if (produceSQLite_para) {
-    //                if (sqlite) {
-    //                    sqlite->createSQLiteTabularDataRecords(tableBody, rowHead, columnHead, reportName, zoneAirLoopFacilityName, peakCondName);
-    //                }
-    //            }
-    //            if (!produceSQLite_para) {
-    //                if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-    //                    ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(
-    //                        tableBody, rowHead, columnHead, reportName, zoneAirLoopFacilityName, peakCondName);
-    //                }
-    //            }
-
-    //            //---- Engineering Checks
-
-    //            rowHead.allocate(6);
-    //            columnHead.allocate(1);
-    //            columnWidth.allocate(1);
-    //            columnWidth = 14; // array assignment - same for all columns
-
-    //            tableBody.allocate(1, 6);
-    //            tableBody = "";
-
-    //            columnHead(1) = "Value";
-    //            // if (ort->unitsStyle != iUnitsStyle::InchPound) {
-    //            if (unitsStyle_para != iUnitsStyle::InchPound) {
-    //                    rowHead(1) = "Outside Air Fraction [fraction]";
-    //                rowHead(2) = "Airflow per Floor Area [m3/s-m2]";
-    //                rowHead(3) = "Airflow per Total Capacity [m3/s-W]";
-    //                rowHead(4) = "Floor Area per Total Capacity [m2/W]";
-    //                rowHead(5) = "Total Capacity per Floor Area [W/m2]";
-    //                // rowHead( 6 ) = "Chiller Pump Power per Flow [W-s/m3]"; // facility only
-    //                // rowHead( 7 ) = "Condenser Pump Power per Flor [W-s/m3]"; // facility only
-    //                rowHead(6) = "Number of People";
-    //            } else {
-    //                rowHead(1) = "Outside Air Fraction [fraction]";
-    //                rowHead(2) = "Airflow per Floor Area [ft3/min-ft2]";
-    //                rowHead(3) = "Airflow per Total Capacity [ft3-h/min-Btu]";
-    //                rowHead(4) = "Floor Area per Total Capacity [ft2-h/Btu]";
-    //                rowHead(5) = "Total Capacity per Floor Area [Btu/h-ft2]";
-    //                // rowHead( 6 ) = "Chiller Pump Power per Flow [W-min/gal]";
-    //                // rowHead( 7 ) = "Condenser Pump Power per Flow [W-min/gal]";
-    //                rowHead(6) = "Number of People";
-    //            }
-
-    //            tableBody(1, 1) = fmt::format("{:.{}f}", curCompLoad.outsideAirRatio, 4); // outside Air
-    //            tableBody(1, 2) = fmt::format("{:0.3E}", curCompLoad.airflowPerFlrArea);  // airflow per floor area
-    //            tableBody(1, 3) = fmt::format("{:0.3E}", curCompLoad.airflowPerTotCap);   // airflow per total capacity
-    //            tableBody(1, 4) = fmt::format("{:0.3E}", curCompLoad.areaPerTotCap);      // area per total capacity
-    //            tableBody(1, 5) = fmt::format("{:0.3E}", curCompLoad.totCapPerArea);      // total capacity per area
-    //            tableBody(1, 6) = fmt::format("{:.{}f}", curCompLoad.numPeople, 1);       // number of people
-
-    //            if (!produceSQLite_para) {
-    //                WriteSubtitle(state, engineeringCheckName);
-    //                WriteTable(state, tableBody, rowHead, columnHead, columnWidth);
-    //            }
-    //            if (produceSQLite_para) {
-    //                if (sqlite) {
-    //                    sqlite->createSQLiteTabularDataRecords(
-    //                        tableBody, rowHead, columnHead, reportName, zoneAirLoopFacilityName, engineeringCheckName);
-    //                }
-    //            }
-    //            if (!produceSQLite_para) {
-    //                if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-    //                    ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(
-    //                        tableBody, rowHead, columnHead, reportName, zoneAirLoopFacilityName, engineeringCheckName);
-    //                }
-    //            }
-
-    //            // write the list of zone for the AirLoop level report
-    //            if (kind == iOutputType::airLoopOutput && curCompLoad.zoneIndices.allocated()) {
-    //                int maxRow = 0;
-    //                for (size_t zi = 1; zi <= curCompLoad.zoneIndices.size(); ++zi) {
-    //                    if (curCompLoad.zoneIndices(zi) > 0) {
-    //                        maxRow = zi;
-    //                    }
-    //                }
-
-    //                rowHead.allocate(maxRow);
-    //                columnHead.allocate(1);
-    //                columnWidth.allocate(1);
-    //                columnWidth = 14; // array assignment - same for all columns
-    //                tableBody.allocate(1, maxRow);
-    //                tableBody = "";
-
-    //                columnHead(1) = "Zone Name";
-    //                for (int zi = 1; zi <= maxRow; ++zi) {
-    //                    rowHead(zi) = fmt::to_string(zi);
-    //                    if (curCompLoad.zoneIndices(zi) > 0) {
-    //                        tableBody(1, zi) = Zone(curCompLoad.zoneIndices(zi)).Name;
-    //                    }
-    //                }
-
-    //                if (!produceSQLite_para) {
-    //                    WriteSubtitle(state, zonesIncludedName);
-    //                    WriteTable(state, tableBody, rowHead, columnHead, columnWidth);
-    //                }
-    //                if (produceSQLite_para) {
-    //                    if (sqlite) {
-    //                        sqlite->createSQLiteTabularDataRecords(
-    //                            tableBody, rowHead, columnHead, reportName, zoneAirLoopFacilityName, zonesIncludedName);
-    //                    }
-    //                }
-    //                if (!produceSQLite_para) {
-    //                    if (ResultsFramework::resultsFramework->timeSeriesAndTabularEnabled()) {
-    //                        ResultsFramework::resultsFramework->TabularReportsCollection.addReportTable(
-    //                            tableBody, rowHead, columnHead, reportName, zoneAirLoopFacilityName, zonesIncludedName);
-    //                    }
-    //                }
-    //            }
-    //        }
-    //    }
-    //}
 
     void WriteReportHeaders(EnergyPlusData &state, std::string const &reportName, std::string const &objectName, OutputProcessor::StoreType const averageOrSum)
     {

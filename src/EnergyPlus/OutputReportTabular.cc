@@ -5119,22 +5119,21 @@ namespace EnergyPlus::OutputReportTabular {
         FillRemainingPredefinedEntries(state);
         auto &ort(state.dataOutRptTab);
 
-        if (ort->WriteTabularFiles) {
+        if (unitSQLiteTable == 0) {
+            ort->unitsStyle_SQLite = iUnitsStyle::None;
+        } else if (unitSQLiteTable == 1) {
+            ort->unitsStyle_SQLite = iUnitsStyle::JtoKWH;
+        } else if (unitSQLiteTable == 2) {
+            ort->unitsStyle_SQLite = iUnitsStyle::JtoMJ;
+        } else if (unitSQLiteTable == 3) {
+            ort->unitsStyle_SQLite = iUnitsStyle::JtoGJ;
+        } else if (unitSQLiteTable == 4) {
+            ort->unitsStyle_SQLite = iUnitsStyle::InchPound;
+        } else {
+            ort->unitsStyle_SQLite = ort->unitsStyle; // This is the default UseOutputControlTableStyles
+        }
 
-            // ort->unitsStyle_SQLite = iUnitsStyle::None;
-            if (unitSQLiteTable == 0) {
-                ort->unitsStyle_SQLite = iUnitsStyle::None;
-            } else if (unitSQLiteTable == 1) {
-                ort->unitsStyle_SQLite = iUnitsStyle::JtoKWH;
-            } else if (unitSQLiteTable == 2) {
-                ort->unitsStyle_SQLite = iUnitsStyle::JtoMJ;
-            } else if (unitSQLiteTable == 3) {
-                ort->unitsStyle_SQLite = iUnitsStyle::JtoGJ;
-            } else if (unitSQLiteTable == 4) {
-                ort->unitsStyle_SQLite = iUnitsStyle::InchPound;
-            } else {
-                ort->unitsStyle_SQLite = ort->unitsStyle; // This is the default UseOutputControlTableStyles
-            }
+        if (ort->WriteTabularFiles) {
 
             // call each type of report in turn
             WriteBEPSTable(state);
@@ -7085,6 +7084,23 @@ namespace EnergyPlus::OutputReportTabular {
         static Real64 leedSiteTotal(0.0);
         Real64 unconvert;
 
+        // JY 2021-01-26 Added temp storage
+        Real64 gtPowerFuelFireGen = ort->gatherPowerFuelFireGen;
+        Real64 gtPowerPV = ort->gatherPowerPV;
+        Real64 gtPowerWind = ort->gatherPowerWind;
+        Real64 gtPowerHTGeothermal = ort->gatherPowerHTGeothermal;
+        Real64 gtPowerConversion = ort->gatherPowerConversion;
+        Real64 gtElecProduced = ort->gatherElecProduced;
+        Real64 gtElecPUrchased = ort->gatherElecPurchased;
+        Real64 gtElecSurplusSold = ort->gatherElecSurplusSold;
+
+        Real64 gtWaterHeatRecovery = ort->gatherWaterHeatRecovery;
+        Real64 gtAirHeatRecoveryCool = ort->gatherAirHeatRecoveryCool;
+        Real64 gtAirHeatRecoveryHeat = ort->gatherAirHeatRecoveryHeat;
+        Real64 gtHeatHTGeothermal = ort->gatherHeatHTGeothermal;
+        Real64 gtHeatSolarWater = ort->gatherHeatSolarWater;
+        Real64 gtHeatSolarAir = ort->gatherHeatSolarAir;
+
         if (ort->displayTabularBEPS || ort->displayLEEDSummary) {
             // show the headers of the report
             if (ort->displayTabularBEPS) {
@@ -7232,6 +7248,25 @@ namespace EnergyPlus::OutputReportTabular {
 
                 collapsedTotal(13) = WaterConversionFunct(collapsedTotal(13), waterConversionFactor);
 
+                if (iUnitSystem == 0) {
+                    gtPowerFuelFireGen = ort->gatherPowerFuelFireGen;
+                    gtPowerPV = ort->gatherPowerPV;
+                    gtPowerWind = ort->gatherPowerWind;
+                    gtPowerHTGeothermal = ort->gatherPowerHTGeothermal;
+                    gtPowerConversion = ort->gatherPowerConversion;
+                    gtElecProduced = ort->gatherElecProduced;
+                    gtElecPUrchased = ort->gatherElecPurchased;
+                    gtElecSurplusSold = ort->gatherElecSurplusSold;
+                } else { // if(iUnitSystem == 1)
+                    ort->gatherPowerFuelFireGen = gtPowerFuelFireGen;
+                    ort->gatherPowerPV = gtPowerPV;
+                    ort->gatherPowerWind = gtPowerWind;
+                    ort->gatherPowerHTGeothermal = gtPowerHTGeothermal;
+                    ort->gatherPowerConversion = gtPowerConversion;
+                    ort->gatherElecProduced = gtElecProduced;
+                    ort->gatherElecPurchased = gtElecPUrchased;
+                    ort->gatherElecSurplusSold = gtElecSurplusSold;
+                }
                 // convert to GJ
                 ort->gatherPowerFuelFireGen /= largeConversionFactor;
                 ort->gatherPowerPV /= largeConversionFactor;
@@ -7695,15 +7730,20 @@ namespace EnergyPlus::OutputReportTabular {
 
                 tableBody = "";
                 tableBody(1, 1) = RealToStr(convBldgGrossFloorArea, 2);
-                if (produceTabular) {
-                    if (ort->unitsStyle == iUnitsStyle::InchPound) {
+
+                // if (ort->unitsStyle == iUnitsStyle::InchPound) {
+                if (unitsStyle_cur == iUnitsStyle::InchPound) {
+                    if (produceTabular) {
                         PreDefTableEntry(
                             state, state.dataOutRptPredefined->pdchLeedGenData, "Total gross floor area [ft2]", RealToStr(convBldgGrossFloorArea, 2));
-                    } else {
+                    }
+                } else {
+                    if (produceTabular) {
                         PreDefTableEntry(
                             state, state.dataOutRptPredefined->pdchLeedGenData, "Total gross floor area [m2]", RealToStr(convBldgGrossFloorArea, 2));
                     }
                 }
+                
                 tableBody(1, 2) = RealToStr(convBldgCondFloorArea, 2);
                 tableBody(1, 3) = RealToStr(convBldgGrossFloorArea - convBldgCondFloorArea, 2);
 
@@ -7901,8 +7941,10 @@ namespace EnergyPlus::OutputReportTabular {
                 if (produceTabular) {
                     PreDefTableEntry(state, state.dataOutRptPredefined->pdchLeedEcsProc, "Electricity", processElecCost, 2);
                 }
-                addFootNoteSubTable(
-                    state, state.dataOutRptPredefined->pdstLeedEneCostSum, "Process energy cost based on ratio of process to total energy.");
+                if (produceTabular) {
+                    addFootNoteSubTable(
+                        state, state.dataOutRptPredefined->pdstLeedEneCostSum, "Process energy cost based on ratio of process to total energy.");
+                }
 
                 //  Energy Use Intensities- Natural Gas
                 if (ort->buildingGrossFloorArea > 0) {
@@ -8051,26 +8093,26 @@ namespace EnergyPlus::OutputReportTabular {
                 {
                     auto const SELECT_CASE_var(resourcePrimaryHeating);
                     if (SELECT_CASE_var == colElectricity) {
-                        footnote = "Note: Electricity appears to be the principal heating source based on energy usage.";
                         if (produceTabular) {
+                            footnote = "Note: Electricity appears to be the principal heating source based on energy usage.";
                             PreDefTableEntry(state, state.dataOutRptPredefined->pdchLeedGenData, "Principal Heating Source", "Electricity");
                         }
                     } else if (SELECT_CASE_var == colGas) {
-                        footnote = "Note: Natural gas appears to be the principal heating source based on energy usage.";
                         if (produceTabular) {
+                            footnote = "Note: Natural gas appears to be the principal heating source based on energy usage.";
                             PreDefTableEntry(state, state.dataOutRptPredefined->pdchLeedGenData, "Principal Heating Source", "Natural Gas");
                         }
                     } else if (SELECT_CASE_var == 3 || SELECT_CASE_var == 4 || SELECT_CASE_var == 5 || SELECT_CASE_var == 6 || SELECT_CASE_var == 7 ||
                                SELECT_CASE_var == 8 || SELECT_CASE_var == 9 || SELECT_CASE_var == 10) {
-                        footnote = "Note: Additional fuel appears to be the principal heating source based on energy usage.";
                         if (produceTabular) {
+                            footnote = "Note: Additional fuel appears to be the principal heating source based on energy usage.";
                             PreDefTableEntry(state, state.dataOutRptPredefined->pdchLeedGenData, "Principal Heating Source", "Additional Fuel");
                         }
                         // additional fuel  <- gasoline (3) | <- diesel (4) | <- coal (5) | <- Fuel Oil No1 (6) | <- Fuel Oil No2 (7)
                         // <- propane (8) | <- otherfuel1 (9) | <- otherfuel2 (10)
                     } else if (SELECT_CASE_var == colPurchHeat) {
-                        footnote = "Note: District heat appears to be the principal heating source based on energy usage.";
                         if (produceTabular) {
+                            footnote = "Note: District heat appears to be the principal heating source based on energy usage.";
                             PreDefTableEntry(state, state.dataOutRptPredefined->pdchLeedGenData, "Principal Heating Source", "District Heat");
                         }
                     }
@@ -8645,6 +8687,21 @@ namespace EnergyPlus::OutputReportTabular {
                 tableBody = "";
 
                 // convert to GJ
+                if (iUnitSystem == 0) {
+                    gtWaterHeatRecovery = ort->gatherWaterHeatRecovery;
+                    gtAirHeatRecoveryCool = ort->gatherAirHeatRecoveryCool;
+                    gtAirHeatRecoveryHeat = ort->gatherAirHeatRecoveryHeat;
+                    gtHeatHTGeothermal = ort->gatherHeatHTGeothermal;
+                    gtHeatSolarWater = ort->gatherHeatSolarWater;
+                    gtHeatSolarAir = ort->gatherHeatSolarAir;
+                } else {
+                    ort->gatherWaterHeatRecovery = gtWaterHeatRecovery;
+                    ort->gatherAirHeatRecoveryCool = gtAirHeatRecoveryCool;
+                    ort->gatherAirHeatRecoveryHeat = gtAirHeatRecoveryHeat;
+                    ort->gatherHeatHTGeothermal = gtHeatHTGeothermal;
+                    ort->gatherHeatSolarWater = gtHeatSolarWater;
+                    ort->gatherHeatSolarAir = gtHeatSolarAir;
+                }
 
                 ort->gatherWaterHeatRecovery /= largeConversionFactor;
                 ort->gatherAirHeatRecoveryCool /= largeConversionFactor;
@@ -8982,25 +9039,25 @@ namespace EnergyPlus::OutputReportTabular {
         auto &ort(state.dataOutRptTab);
 
         if (ort->displaySourceEnergyEndUseSummary) {
-            
+
+            // show the headers of the report
+            WriteReportHeaders(state, "Source Energy End Use Components Summary", "Entire Facility", OutputProcessor::StoreType::Averaged);
+            // show the number of hours that the table applies to
+            WriteTextLine(state, "Values gathered over " + RealToStr(ort->gatherElapsedTimeBEPS, 2) + " hours", true);
+            if (ort->gatherElapsedTimeBEPS < 8759.0) { // might not add up to 8760 exactly but can't be more than 1 hour diff.
+                WriteTextLine(state, "WARNING: THE REPORT DOES NOT REPRESENT A FULL ANNUAL SIMULATION.", true);
+            }
+            WriteTextLine(state, "", true);
+
+            // determine building floor areas
+            DetermineBuildingFloorArea(state);
+
             for (int iUnitSystem = 0; iUnitSystem <= 1; iUnitSystem++) {
                 iUnitsStyle unitsStyle_cur = ort->unitsStyle;
                 bool produceTabular = true;
                 bool produceSQLite = false;
                 if (produceDualUnitsFlags(iUnitSystem, ort->unitsStyle, ort->unitsStyle_SQLite, unitsStyle_cur, produceTabular, produceSQLite)) break;
 
-                if (produceTabular) {
-                    // show the headers of the report
-                    WriteReportHeaders(state, "Source Energy End Use Components Summary", "Entire Facility", OutputProcessor::StoreType::Averaged);
-                    // show the number of hours that the table applies to
-                    WriteTextLine(state, "Values gathered over " + RealToStr(ort->gatherElapsedTimeBEPS, 2) + " hours", true);
-                    if (ort->gatherElapsedTimeBEPS < 8759.0) { // might not add up to 8760 exactly but can't be more than 1 hour diff.
-                        WriteTextLine(state, "WARNING: THE REPORT DOES NOT REPRESENT A FULL ANNUAL SIMULATION.", true);
-                    }
-                    WriteTextLine(state, "", true);
-                }
-                // determine building floor areas
-                DetermineBuildingFloorArea(state);
                 // collapse the gatherEndUseBEPS array to the resource groups displayed
                 for (size_t jEndUse = 1; jEndUse <= DataGlobalConstants::iEndUse.size(); ++jEndUse) {
                     collapsedEndUse(1, jEndUse) = ort->gatherEndUseBySourceBEPS(1, jEndUse);   // electricity
@@ -9320,7 +9377,7 @@ namespace EnergyPlus::OutputReportTabular {
                         }
                     }
                 } // End of Normalized by Total Area
-            }
+            } // End of Dual Units reporting
         } // end if displaySourceEnergyEndUseSummary
     }
 
@@ -9372,6 +9429,8 @@ namespace EnergyPlus::OutputReportTabular {
         auto &ort(state.dataOutRptTab);
 
         if (ort->displayDemandEndUse) {
+            // show the headers of the report
+            WriteReportHeaders(state, "Demand End Use Components Summary", "Entire Facility", OutputProcessor::StoreType::Averaged);
 
             for (int iUnitSystem = 0; iUnitSystem <= 1; iUnitSystem++) {
                 iUnitsStyle unitsStyle_cur = ort->unitsStyle;
@@ -9379,8 +9438,6 @@ namespace EnergyPlus::OutputReportTabular {
                 bool produceSQLite = false;
                 if (produceDualUnitsFlags(iUnitSystem, ort->unitsStyle, ort->unitsStyle_SQLite, unitsStyle_cur, produceTabular, produceSQLite)) break;                
 
-                // show the headers of the report
-                WriteReportHeaders(state, "Demand End Use Components Summary", "Entire Facility", OutputProcessor::StoreType::Averaged);
                 // totals - select which additional fuel to display and which other district heating
                 collapsedTotal = 0.0;
                 collapsedTotal(1) = ort->gatherDemandTotal(1); // electricity
@@ -9830,18 +9887,18 @@ namespace EnergyPlus::OutputReportTabular {
                     if (state.dataOutputProcessor->EndUseCategory(jEndUse).NumSubcategories > 0) {
                         for (kEndUseSub = 1; kEndUseSub <= state.dataOutputProcessor->EndUseCategory(jEndUse).NumSubcategories; ++kEndUseSub) {
                             PreDefTableEntry(state,
-                                             resource_entry_map(iResource),
-                                             state.dataOutputProcessor->EndUseCategory(jEndUse).DisplayName + " -- " +
-                                                 state.dataOutputProcessor->EndUseCategory(jEndUse).SubcategoryName(kEndUseSub),
-                                             collapsedIndEndUseSub(kEndUseSub, jEndUse, iResource));
+                                                 resource_entry_map(iResource),
+                                                 state.dataOutputProcessor->EndUseCategory(jEndUse).DisplayName + " -- " +
+                                                     state.dataOutputProcessor->EndUseCategory(jEndUse).SubcategoryName(kEndUseSub),
+                                                 collapsedIndEndUseSub(kEndUseSub, jEndUse, iResource));
                             ++i;
                         }
                         // put other
                         if (ort->needOtherRowLEED45(jEndUse)) {
                             PreDefTableEntry(state,
-                                             resource_entry_map(iResource),
-                                             state.dataOutputProcessor->EndUseCategory(jEndUse).DisplayName + " -- Other",
-                                             endUseSubOther(iResource, jEndUse));
+                                                 resource_entry_map(iResource),
+                                                 state.dataOutputProcessor->EndUseCategory(jEndUse).DisplayName + " -- Other",
+                                                 endUseSubOther(iResource, jEndUse));
                             ++i;
                         }
                     } else {
@@ -9914,20 +9971,18 @@ namespace EnergyPlus::OutputReportTabular {
 
         if (!state.dataCostEstimateManager->DoCostEstimate) return;
 
+        WriteReportHeaders(state, "Component Cost Economics Summary", "Entire Facility", OutputProcessor::StoreType::Averaged);
+
+        // compute floor area if no ABUPS
+        if (ort->buildingConditionedFloorArea == 0.0) {
+            DetermineBuildingFloorArea(state);
+        }
+
         for (int iUnitSystem = 0; iUnitSystem <= 1; iUnitSystem++) {
             iUnitsStyle unitsStyle_cur = ort->unitsStyle;
             bool produceTabular = true;
             bool produceSQLite = false;
             if (produceDualUnitsFlags(iUnitSystem, ort->unitsStyle, ort->unitsStyle_SQLite, unitsStyle_cur, produceTabular, produceSQLite)) break;
-
-            if (produceTabular) {
-                WriteReportHeaders(state, "Component Cost Economics Summary", "Entire Facility", OutputProcessor::StoreType::Averaged);
-            }
-
-            // compute floor area if no ABUPS
-            if (ort->buildingConditionedFloorArea == 0.0) {
-                DetermineBuildingFloorArea(state);
-            }
 
             // 1st sub-table with total Costs and normalized with area
             rowHead.allocate(10);
@@ -10090,7 +10145,8 @@ namespace EnergyPlus::OutputReportTabular {
             for (item = 1; item <= state.dataCostEstimateManager->NumLineItems; ++item) {
                 tableBody(1, item) = fmt::to_string(state.dataCostEstimateManager->CostLineItem(item).LineNumber);
                 tableBody(2, item) = state.dataCostEstimateManager->CostLineItem(item).LineName;
-                if (ort->unitsStyle == iUnitsStyle::InchPound) {
+                // if (ort->unitsStyle == iUnitsStyle::InchPound) {
+                if (unitsStyle_cur == iUnitsStyle::InchPound) {
                     LookupSItoIP(state, state.dataCostEstimateManager->CostLineItem(item).Units, unitConvIndex, IPunitName);
                     if (unitConvIndex != 0) {
                         IPqty = ConvertIP(state, unitConvIndex, state.dataCostEstimateManager->CostLineItem(item).Qty);
@@ -10350,7 +10406,7 @@ namespace EnergyPlus::OutputReportTabular {
                 // do unit conversions if necessary
                 // if (ort->unitsStyle == iUnitsStyle::InchPound) {
                 if (unitsStyle_cur == iUnitsStyle::InchPound) {
-                        SIunit = "[m]";
+                    SIunit = "[m]";
                     LookupSItoIP(state, SIunit, unitConvIndex, m_unitName);
                     m_unitConv = ConvertIP(state, unitConvIndex, 1.0);
                     SIunit = "[m2]";
@@ -10481,8 +10537,8 @@ namespace EnergyPlus::OutputReportTabular {
                 kOpaque = 0;
 
                 DetailedWWR = (inputProcessor->getNumSectionsFound("DETAILEDWWR_DEBUG") > 0);
-                if (produceTabular) {
-                    if (DetailedWWR) {
+                if (DetailedWWR) {
+                    if (produceTabular) {
                         print(state.files.debug, "{}\n", "======90.1 Classification [>=60 & <=120] tilt = wall==================");
                         print(state.files.debug, "{}\n", "SurfName,Class,Area,Tilt");
                     }
@@ -10547,8 +10603,8 @@ namespace EnergyPlus::OutputReportTabular {
                                             if (isConditioned) aboveGroundWallAreaWcond += curArea * mult;
                                         }
                                     }
-                                    if (produceTabular) {
-                                        if (DetailedWWR) {
+                                    if (DetailedWWR) {
+                                        if (produceTabular) {
                                             print(state.files.debug,
                                                   "{},Wall,{:.1R},{:.1R}\n",
                                                   Surface(iSurf).Name,
@@ -10574,8 +10630,8 @@ namespace EnergyPlus::OutputReportTabular {
                                     zoneOpeningArea(zonePt) +=
                                         curArea * Surface(iSurf).Multiplier; // total window opening area for each zone (glass plus frame area)
                                     zoneGlassArea(zonePt) += Surface(iSurf).GrossArea * Surface(iSurf).Multiplier;
-                                    if (produceTabular) {
-                                        if (DetailedWWR) {
+                                    if (DetailedWWR) {
+                                        if (produceTabular) {
                                             print(state.files.debug,
                                                   "{},Window,{:.1R},{:.1R}\n",
                                                   Surface(iSurf).Name,
@@ -10592,8 +10648,8 @@ namespace EnergyPlus::OutputReportTabular {
                                     (SELECT_CASE_var == SurfaceClass::Roof)) {
                                     mult = Zone(zonePt).Multiplier * Zone(zonePt).ListMultiplier;
                                     roofArea += curArea * mult;
-                                    if (produceTabular) {
-                                        if (DetailedWWR) {
+                                    if (DetailedWWR) {
+                                        if (produceTabular) {
                                             print(state.files.debug,
                                                   "{},Roof,{:.1R},{:.1R}\n",
                                                   Surface(iSurf).Name,
@@ -10604,8 +10660,8 @@ namespace EnergyPlus::OutputReportTabular {
                                 } else if ((SELECT_CASE_var == SurfaceClass::Window) || (SELECT_CASE_var == SurfaceClass::TDD_Dome)) {
                                     mult = Zone(zonePt).Multiplier * Zone(zonePt).ListMultiplier * Surface(iSurf).Multiplier;
                                     skylightArea += curArea * mult;
-                                    if (produceTabular) {
-                                        if (DetailedWWR) {
+                                    if (DetailedWWR) {
+                                        if (produceTabular) {
                                             print(state.files.debug,
                                                   "{},Skylight,{:.1R},{:.1R}\n",
                                                   Surface(iSurf).Name,
@@ -10624,8 +10680,8 @@ namespace EnergyPlus::OutputReportTabular {
                 TotalWallArea = wallAreaN + wallAreaS + wallAreaE + wallAreaW;
                 TotalAboveGroundWallArea = aboveGroundWallAreaN + aboveGroundWallAreaS + aboveGroundWallAreaE + aboveGroundWallAreaW;
                 TotalWindowArea = windowAreaN + windowAreaS + windowAreaE + windowAreaW;
-                if (produceTabular) {
-                    if (DetailedWWR) {
+                if (DetailedWWR) {
+                    if (produceTabular) {
                         print(state.files.debug, "{}\n", "========================");
                         print(state.files.debug, "{}\n", "TotalWallArea,WallAreaN,WallAreaS,WallAreaE,WallAreaW");
                         print(state.files.debug, "{}\n", "TotalWindowArea,WindowAreaN,WindowAreaS,WindowAreaE,WindowAreaW");
@@ -10780,8 +10836,8 @@ namespace EnergyPlus::OutputReportTabular {
                 rowHead(2) = "Skylight Area " + m2_unitName;
                 rowHead(3) = "Skylight-Roof Ratio [%]";
 
-                if (produceTabular) {
-                    if (DetailedWWR) {
+                if (DetailedWWR) {
+                    if (produceTabular) {
                         print(state.files.debug, "{}\n", "========================");
                         print(state.files.debug, "{}\n", "TotalRoofArea,SkylightArea");
                         print(state.files.debug, "{:.2R},{:.2R}\n", roofArea, skylightArea);
@@ -11660,7 +11716,7 @@ namespace EnergyPlus::OutputReportTabular {
                                     // finally assign the entry to the place in the table body
                                     // if (ort->unitsStyle == iUnitsStyle::InchPound || ort->unitsStyle == iUnitsStyle::JtoKWH) {
                                     if (unitsStyle_cur == iUnitsStyle::InchPound || unitsStyle_cur == iUnitsStyle::JtoKWH) {
-                                            columnUnitConv = colUnitConv(colCurrent);
+                                        columnUnitConv = colUnitConv(colCurrent);
                                         if (UtilityRoutines::SameString(state.dataOutRptPredefined->subTable(jSubTable).name,
                                                                         "SizingPeriod:DesignDay") &&
                                                 unitsStyle_cur == iUnitsStyle::InchPound) { // ort->unitsStyle == iUnitsStyle::InchPound)
@@ -11773,6 +11829,7 @@ namespace EnergyPlus::OutputReportTabular {
         auto &ort(state.dataOutRptTab);
 
         if (ort->displayComponentSizing) {
+            WriteReportHeaders(state, "Component Sizing Summary", "Entire Facility", OutputProcessor::StoreType::Averaged);
 
             for (int iUnitSystem = 0; iUnitSystem <= 1; iUnitSystem++) {
                 iUnitsStyle unitsStyle_cur = ort->unitsStyle;
@@ -11780,9 +11837,6 @@ namespace EnergyPlus::OutputReportTabular {
                 bool produceSQLite = false;
                 if (produceDualUnitsFlags(iUnitSystem, ort->unitsStyle, ort->unitsStyle_SQLite, unitsStyle_cur, produceTabular, produceSQLite)) break;
 
-                if (produceTabular) {
-                    WriteReportHeaders(state, "Component Sizing Summary", "Entire Facility", OutputProcessor::StoreType::Averaged);
-                } 
                 // The arrays that look for unique headers are dimensioned in the
                 // running program since the size of the number of entries is
                 // not previouslly known. Use the size of all entries since that
@@ -11875,7 +11929,7 @@ namespace EnergyPlus::OutputReportTabular {
                         curColHeadWithSI = uniqueDesc(jUnique);
                         // if (ort->unitsStyle == iUnitsStyle::InchPound) {
                         if (unitsStyle_cur == iUnitsStyle::InchPound) {
-                                LookupSItoIP(state, curColHeadWithSI, indexUnitConv, curColHead);
+                            LookupSItoIP(state, curColHeadWithSI, indexUnitConv, curColHead);
                             colUnitConv(jUnique) = indexUnitConv;
                         } else {
                             curColHead = curColHeadWithSI;
@@ -11930,18 +11984,23 @@ namespace EnergyPlus::OutputReportTabular {
                     // write the table
                     if (produceTabular) {
                         WriteSubtitle(state, state.dataOutRptPredefined->CompSizeTableEntry(foundEntry).typeField);
-                        if (state.dataOutRptPredefined->CompSizeTableEntry(foundEntry).typeField == "AirTerminal:SingleDuct:VAV:Reheat" ||
+                    }
+                    
+                    if (state.dataOutRptPredefined->CompSizeTableEntry(foundEntry).typeField == "AirTerminal:SingleDuct:VAV:Reheat" ||
                             state.dataOutRptPredefined->CompSizeTableEntry(foundEntry).typeField == "AirTerminal:SingleDuct:VAV:NoReheat") {
-                            WriteTable(state,
-                                       tableBody,
-                                       rowHead,
-                                       columnHead,
-                                       columnWidth,
-                                       false,
-                                       "User-Specified values were used. Design Size values were used if no User-Specified values were provided. "
-                                       "Design Size "
-                                       "values may be derived from alternate User-Specified values.");
-                        } else {
+                            if (produceTabular) {
+                                WriteTable(state,
+                                           tableBody,
+                                           rowHead,
+                                           columnHead,
+                                           columnWidth,
+                                           false,
+                                           "User-Specified values were used. Design Size values were used if no User-Specified values were provided. "
+                                           "Design Size "
+                                           "values may be derived from alternate User-Specified values.");
+                            }
+                    } else {
+                        if (produceTabular) {
                             WriteTable(state,
                                        tableBody,
                                        rowHead,
@@ -11951,6 +12010,7 @@ namespace EnergyPlus::OutputReportTabular {
                                        "User-Specified values were used. Design Size values were used if no User-Specified values were provided.");
                         }
                     }
+                    
                     if (produceSQLite) {
                         if (sqlite) {
                             sqlite->createSQLiteTabularDataRecords(tableBody,
@@ -12214,7 +12274,9 @@ namespace EnergyPlus::OutputReportTabular {
                         for (int iCol = 1; iCol <= numCols; ++iCol) {
                             columnHead(iCol) = headerFields.at(iCol);
                             // set the unit conversions
-                            colUnitConv(iCol) = unitsFromHeading(state, columnHead(iCol));
+                            // colUnitConv(iCol) = unitsFromHeading(state, columnHead(iCol));
+                            // JY 2021-01-26 use overloaded version for dual units
+                            colUnitConv(iCol) = unitsFromHeading(state, columnHead(iCol), unitsStyle_cur);
                         }
                         // look for data lines
                         int rowNum = 0;
@@ -12227,7 +12289,8 @@ namespace EnergyPlus::OutputReportTabular {
                                     std::vector<std::string> dataFields = splitCommaString(bodyLine);
                                     rowHead(rowNum) = fmt::to_string(rowNum);
                                     for (int iCol = 1; iCol <= numCols && iCol < int(dataFields.size()); ++iCol) {
-                                        if (ort->unitsStyle == iUnitsStyle::InchPound || ort->unitsStyle == iUnitsStyle::JtoKWH) {
+                                        // if (ort->unitsStyle == iUnitsStyle::InchPound || ort->unitsStyle == iUnitsStyle::JtoKWH) {
+                                        if (unitsStyle_cur == iUnitsStyle::InchPound || unitsStyle_cur == iUnitsStyle::JtoKWH) {
                                             if (isNumber(dataFields[iCol]) && colUnitConv(iCol) > 0) { // if it is a number that has a conversion
                                                 int numDecimalDigits = digitsAferDecimal(dataFields[iCol]);
                                                 Real64 convertedVal = ConvertIP(state, colUnitConv(iCol), StrToReal(dataFields[iCol]));
@@ -12236,8 +12299,11 @@ namespace EnergyPlus::OutputReportTabular {
                                                        iCol > 1) { // if it is the last column and the
                                                                    // header is Value then treat the
                                                                    // previous column as source of units
-                                                int indexUnitConv =
-                                                    unitsFromHeading(state, tableBody(iCol - 1, rowNum)); // base units on previous column
+                                                // int indexUnitConv =
+                                                //    unitsFromHeading(state, tableBody(iCol - 1, rowNum)); // base units on previous column
+                                                // JY 2021-01-26 use overloaded version for dual units
+                                                int indexUnitConv = unitsFromHeading(state, tableBody(iCol - 1, rowNum), unitsStyle_cur);     // base units on previous column
+
                                                 int numDecimalDigits = digitsAferDecimal(dataFields[iCol]);
                                                 Real64 convertedVal = ConvertIP(state, indexUnitConv, StrToReal(dataFields[iCol]));
                                                 tableBody(iCol, rowNum) = RealToStr(convertedVal, numDecimalDigits);
@@ -12281,6 +12347,26 @@ namespace EnergyPlus::OutputReportTabular {
         if (ort->unitsStyle == iUnitsStyle::InchPound) {
             LookupSItoIP(state, heading, unitConv, curHeading);
         } else if (ort->unitsStyle == iUnitsStyle::JtoKWH) {
+            LookupJtokWH(state, heading, unitConv, curHeading);
+        } else {
+            curHeading = heading;
+        }
+        heading = curHeading;
+        return (unitConv);
+    }
+
+    // JY 2021-01-26 Overloaded this function to accomondate dual units output needs
+    // changes the heading that contains and SI to IP as well as providing the unit conversion index
+    // Glazer Nov 2016
+    int unitsFromHeading(EnergyPlusData &state, std::string &heading, iUnitsStyle unitsStyle_para)
+    {
+        // auto &ort(state.dataOutRptTab);
+
+        std::string curHeading = "";
+        int unitConv = 0;
+        if (unitsStyle_para == iUnitsStyle::InchPound) {
+            LookupSItoIP(state, heading, unitConv, curHeading);
+        } else if (unitsStyle_para == iUnitsStyle::JtoKWH) {
             LookupJtokWH(state, heading, unitConv, curHeading);
         } else {
             curHeading = heading;
@@ -12917,7 +13003,8 @@ namespace EnergyPlus::OutputReportTabular {
         Array1D<CompLoadTablesType> FacilityZonesHeatCompLoadTables; // zone results used for facility report - never directly output
         Array1D<CompLoadTablesType> FacilityZonesCoolCompLoadTables;
 
-        CompLoadTablesType curCompLoadTable; // active component load table
+        // JY 2021-01-25 The following variable is redudant in the original code, deleting the line
+        // CompLoadTablesType curCompLoadTable; // active component load table
 
         for (int iUnitSystem = 0; iUnitSystem <= 1; iUnitSystem++) {
             iUnitsStyle unitsStyle_cur = ort->unitsStyle;
@@ -13299,10 +13386,10 @@ namespace EnergyPlus::OutputReportTabular {
                     CreateListOfZonesForAirLoop(state, AirLoopHeatCompLoadTables(iAirLoop), zoneToAirLoopHeat, iAirLoop);
 
                     // LoadSummaryUnitConversion(state, AirLoopCoolCompLoadTables(iAirLoop));
-                    // JY 2021-01-12 Use the reloaded version instead for dual units adaption
+                    // JY 2021-01-12 Use the overloaded version instead for dual units adaption
                     LoadSummaryUnitConversion(state, AirLoopCoolCompLoadTables(iAirLoop), unitsStyle_cur);
                     //LoadSummaryUnitConversion(state, AirLoopHeatCompLoadTables(iAirLoop));
-                    // JY 2021-01-12 Use the reloaded version instead for dual units adaption
+                    // JY 2021-01-12 Use the overloaded version instead for dual units adaption
                     LoadSummaryUnitConversion(state, AirLoopHeatCompLoadTables(iAirLoop), unitsStyle_cur);
 
                     // OutputCompLoadSummary(
@@ -13412,10 +13499,10 @@ namespace EnergyPlus::OutputReportTabular {
                 ComputePeakDifference(FacilityHeatCompLoadTables);
 
                 // LoadSummaryUnitConversion(state, FacilityCoolCompLoadTables);
-                // JY 2021-01-12 Use the reloaded version instead for dual units adaption
+                // JY 2021-01-12 Use the overloaded version instead for dual units adaption
                 LoadSummaryUnitConversion(state, FacilityCoolCompLoadTables, unitsStyle_cur);
                 // LoadSummaryUnitConversion(state, FacilityHeatCompLoadTables);
-                // JY 2021-01-12 Use the reloaded version instead for dual units adaption
+                // JY 2021-01-12 Use the overloaded version instead for dual units adaption
                 LoadSummaryUnitConversion(state, FacilityHeatCompLoadTables, unitsStyle_cur);
 
                 // OutputCompLoadSummary(state, iOutputType::facilityOutput, FacilityCoolCompLoadTables, FacilityHeatCompLoadTables, 0);
@@ -13429,10 +13516,10 @@ namespace EnergyPlus::OutputReportTabular {
                     if (!state.dataZoneEquip->ZoneEquipConfig(iZone).IsControlled) continue;
                     if (allocated(CalcFinalZoneSizing)) {
                         // LoadSummaryUnitConversion(state, ZoneCoolCompLoadTables(iZone));
-                        // JY 2021-01-12 Use the reloaded version instead for dual units adaption
+                        // JY 2021-01-12 Use the overloaded version instead for dual units adaption
                         LoadSummaryUnitConversion(state, ZoneCoolCompLoadTables(iZone), unitsStyle_cur);
                         // LoadSummaryUnitConversion(state, ZoneHeatCompLoadTables(iZone));
-                        // JY 2021-01-12 Use the reloaded version instead for dual units adaption
+                        // JY 2021-01-12 Use the overloaded version instead for dual units adaption
                         LoadSummaryUnitConversion(state, ZoneHeatCompLoadTables(iZone), unitsStyle_cur);
 
                         // OutputCompLoadSummary(state, iOutputType::zoneOutput, ZoneCoolCompLoadTables(iZone), ZoneHeatCompLoadTables(iZone), iZone);
@@ -13448,6 +13535,12 @@ namespace EnergyPlus::OutputReportTabular {
             AirLoopCoolCompLoadTables.deallocate();
             AirLoopZonesHeatCompLoadTables.deallocate();
             AirLoopZonesCoolCompLoadTables.deallocate();
+
+            FacilityHeatCompLoadTables.cells.deallocate();
+            FacilityHeatCompLoadTables.cellUsed.deallocate();
+            FacilityCoolCompLoadTables.cells.deallocate();
+            FacilityCoolCompLoadTables.cellUsed.deallocate();
+
             FacilityZonesHeatCompLoadTables.deallocate();
             FacilityZonesCoolCompLoadTables.deallocate();
 
@@ -14426,7 +14519,8 @@ namespace EnergyPlus::OutputReportTabular {
                 rowHead(rGrdTot) = "Grand Total";
 
                 columnHead.allocate(cPerArea);
-                if (ort->unitsStyle != iUnitsStyle::InchPound) {
+                // if (ort->unitsStyle != iUnitsStyle::InchPound) {
+                if (unitsStyle_para != iUnitsStyle::InchPound) {
                     columnHead(cSensInst) = "Sensible - Instant [W]";
                     columnHead(cSensDelay) = "Sensible - Delayed [W]";
                     columnHead(cSensRA) = "Sensible - Return Air [W]";
@@ -14435,7 +14529,6 @@ namespace EnergyPlus::OutputReportTabular {
                     columnHead(cPerc) = "%Grand Total";
                     columnHead(cArea) = "Related Area [m2]";
                     columnHead(cPerArea) = "Total per Area [W/m2]";
-
                 } else {
                     columnHead(cSensInst) = "Sensible - Instant [Btu/h]";
                     columnHead(cSensDelay) = "Sensible - Delayed [Btu/h]";

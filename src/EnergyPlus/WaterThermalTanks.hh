@@ -356,6 +356,7 @@ namespace WaterThermalTanks {
 
         bool myOneTimeInitFlag;
 
+        bool bIsVScoil;
         // end of variables for variable-speed HPWH
 
         // Default Constructor
@@ -382,7 +383,7 @@ namespace WaterThermalTanks {
               HPWHAirMassFlowRate(DataGlobalConstants::MaxSpeedLevels, 0.0), HPWHWaterVolFlowRate(DataGlobalConstants::MaxSpeedLevels, 0.0),
               HPWHWaterMassFlowRate(DataGlobalConstants::MaxSpeedLevels, 0.0), MSAirSpeedRatio(DataGlobalConstants::MaxSpeedLevels, 0.0),
               MSWaterSpeedRatio(DataGlobalConstants::MaxSpeedLevels, 0.0), bIsIHP(false), MyOneTimeFlagHP(true), MyTwoTimeFlagHP(true),
-              CheckHPWHEquipName(true), myOneTimeInitFlag(true)
+              CheckHPWHEquipName(true), myOneTimeInitFlag(true), bIsVScoil(false)
         {
         }
 
@@ -901,6 +902,8 @@ namespace WaterThermalTanks {
 
     bool GetWaterThermalTankInput(EnergyPlusData &state);
 
+    void getHPWaterHeaterCapEtc(EnergyPlusData &state, HeatPumpWaterHeaterData &HPWH, bool bIsVScoil);
+
     void CalcWaterThermalTankZoneGains(EnergyPlusData &state);
 
     int getTankIDX(EnergyPlusData &state, std::string const &CompName, int &CompIndex);
@@ -937,6 +940,7 @@ struct WaterThermalTanksData : BaseGlobalStruct
     Array1D<WaterThermalTanks::WaterHeaterDesuperheaterData> WaterHeaterDesuperheater;
     std::unordered_map<std::string, std::string> UniqueWaterThermalTankNames;
 
+    bool getWaterHPWaterHeaterCapEtcFlag;
     bool getWaterThermalTankInputFlag; // Calls to Water Heater from multiple places in code
     bool calcWaterThermalTankZoneGainsMyEnvrnFlag;
 
@@ -957,15 +961,18 @@ struct WaterThermalTanksData : BaseGlobalStruct
         this->HPWaterHeater.deallocate();
         this->WaterHeaterDesuperheater.deallocate();
         this->UniqueWaterThermalTankNames.clear();
+        this->getWaterHPWaterHeaterCapEtcFlag = true;
         this->getWaterThermalTankInputFlag = true;
         this->calcWaterThermalTankZoneGainsMyEnvrnFlag = true;
     }
 
     // Default Constructor
     WaterThermalTanksData()
-        : heatMode(1), floatMode(0), ventMode(-1), coolMode(2), numChilledWaterMixed(0), numChilledWaterStratified(0), numWaterHeaterMixed(0),
-          numWaterHeaterStratified(0), numWaterThermalTank(0), numWaterHeaterDesuperheater(0), numHeatPumpWaterHeater(0), numWaterHeaterSizing(0),
-          hpPartLoadRatio(0.0), mixerInletAirSchedule(0.0), mdotAir(0.0), getWaterThermalTankInputFlag(true),
+        : heatMode(1), floatMode(0), ventMode(-1), coolMode(2),
+          numChilledWaterMixed(0), numChilledWaterStratified(0), numWaterHeaterMixed(0),
+          numWaterHeaterStratified(0), numWaterThermalTank(0), numWaterHeaterDesuperheater(0),
+          numHeatPumpWaterHeater(0), numWaterHeaterSizing(0), hpPartLoadRatio(0.0), mixerInletAirSchedule(0.0), mdotAir(0.0),
+          getWaterHPWaterHeaterCapEtcFlag(true), getWaterThermalTankInputFlag(true),
           calcWaterThermalTankZoneGainsMyEnvrnFlag(true)
     {
     }

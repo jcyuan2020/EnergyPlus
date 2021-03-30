@@ -1724,8 +1724,10 @@ bool getHPWaterHeaterInput(EnergyPlusData &state)
         } else if ((HPWH.DXCoilNum > 0) && (bIsVScoil)) {
 
             if (HPWH.bIsIHP) {
-                HPWH.Capacity = GetDWHCoilCapacityIHP(
-                    state, HPWH.DXCoilType, HPWH.DXCoilName, IntegratedHeatPump::IHPOperationMode::SCWHMatchWHMode, DXCoilErrFlag);
+                if (!state.dataGlobal->DoingSizing) {
+                    HPWH.Capacity = GetDWHCoilCapacityIHP(
+                        state, HPWH.DXCoilType, HPWH.DXCoilName, IntegratedHeatPump::IHPOperationMode::SCWHMatchWHMode, DXCoilErrFlag);
+                }
                 HPWH.DXCoilAirInletNode = IntegratedHeatPump::GetCoilInletNodeIHP(state, HPWH.DXCoilType, HPWH.DXCoilName, DXCoilErrFlag);
                 HPWH.DXCoilPLFFPLR = GetIHPDWHCoilPLFFPLR(
                     state, HPWH.DXCoilType, HPWH.DXCoilName, IntegratedHeatPump::IHPOperationMode::SCWHMatchWHMode, DXCoilErrFlag);

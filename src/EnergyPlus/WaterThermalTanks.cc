@@ -1769,46 +1769,46 @@ bool getHPWaterHeaterInput(EnergyPlusData &state)
             ErrorsFound = true;
         }
 
-            //if (HPWH.DXCoilNum > 0 && !bIsVScoil) {
-            //    // get HPWH capacity, air inlet node, and PLF curve info from DX coil object
-            //    HPWH.Capacity = state.dataDXCoils->DXCoil(HPWH.DXCoilNum).RatedTotCap2;
-            //    HPWH.DXCoilAirInletNode = state.dataDXCoils->DXCoil(HPWH.DXCoilNum).AirInNode;
-            //    HPWH.DXCoilPLFFPLR = state.dataDXCoils->DXCoil(HPWH.DXCoilNum).PLFFPLR(1);
-            //    // check the range of condenser pump power to be <= 5 gpm/ton
-            //    if (state.dataDXCoils->DXCoil(HPWH.DXCoilNum).HPWHCondPumpElecNomPower / state.dataDXCoils->DXCoil(HPWH.DXCoilNum).RatedTotCap2 > 0.1422) {
-            //        ShowWarningError(
-            //            state,
-            //            state.dataDXCoils->DXCoil(HPWH.DXCoilNum).DXCoilType + "= " + state.dataDXCoils->DXCoil(HPWH.DXCoilNum).Name +
-            //                format(": Rated condenser pump power per watt of rated heating capacity has exceeded the recommended maximum of 0.1422 "
-            //                       "W/W (41.67 watt/MBH). Condenser pump power per watt = {:.4T}",
-            //                       (state.dataDXCoils->DXCoil(HPWH.DXCoilNum).HPWHCondPumpElecNomPower / state.dataDXCoils->DXCoil(HPWH.DXCoilNum).RatedTotCap2)));
-            //    }
-            //} else if ((HPWH.DXCoilNum > 0) && (bIsVScoil)) {
+        //if (HPWH.DXCoilNum > 0 && !bIsVScoil) {
+        //    // get HPWH capacity, air inlet node, and PLF curve info from DX coil object
+        //    HPWH.Capacity = state.dataDXCoils->DXCoil(HPWH.DXCoilNum).RatedTotCap2;
+        //    HPWH.DXCoilAirInletNode = state.dataDXCoils->DXCoil(HPWH.DXCoilNum).AirInNode;
+        //    HPWH.DXCoilPLFFPLR = state.dataDXCoils->DXCoil(HPWH.DXCoilNum).PLFFPLR(1);
+        //    // check the range of condenser pump power to be <= 5 gpm/ton
+        //    if (state.dataDXCoils->DXCoil(HPWH.DXCoilNum).HPWHCondPumpElecNomPower / state.dataDXCoils->DXCoil(HPWH.DXCoilNum).RatedTotCap2 > 0.1422) {
+        //        ShowWarningError(
+        //            state,
+        //            state.dataDXCoils->DXCoil(HPWH.DXCoilNum).DXCoilType + "= " + state.dataDXCoils->DXCoil(HPWH.DXCoilNum).Name +
+        //                format(": Rated condenser pump power per watt of rated heating capacity has exceeded the recommended maximum of 0.1422 "
+        //                       "W/W (41.67 watt/MBH). Condenser pump power per watt = {:.4T}",
+        //                       (state.dataDXCoils->DXCoil(HPWH.DXCoilNum).HPWHCondPumpElecNomPower / state.dataDXCoils->DXCoil(HPWH.DXCoilNum).RatedTotCap2)));
+        //    }
+        //} else if ((HPWH.DXCoilNum > 0) && (bIsVScoil)) {
 
-            //    if (HPWH.bIsIHP) {
-            //        if (!state.dataGlobal->DoingSizing) {
-            //            HPWH.Capacity = GetDWHCoilCapacityIHP(
-            //                state, HPWH.DXCoilType, HPWH.DXCoilName, IntegratedHeatPump::IHPOperationMode::SCWHMatchWHMode, DXCoilErrFlag);
-            //        }
-            //        HPWH.DXCoilAirInletNode = IntegratedHeatPump::GetCoilInletNodeIHP(state, HPWH.DXCoilType, HPWH.DXCoilName, DXCoilErrFlag);
-            //        HPWH.DXCoilPLFFPLR = GetIHPDWHCoilPLFFPLR(state, HPWH.DXCoilType, HPWH.DXCoilName, IntegratedHeatPump::IHPOperationMode::SCWHMatchWHMode, DXCoilErrFlag);
-            //    } else {
-            //        HPWH.Capacity = VariableSpeedCoils::GetCoilCapacityVariableSpeed(state, HPWH.DXCoilType, HPWH.DXCoilName, DXCoilErrFlag);
-            //        HPWH.DXCoilAirInletNode = VariableSpeedCoils::GetCoilInletNodeVariableSpeed(state, HPWH.DXCoilType, HPWH.DXCoilName, DXCoilErrFlag);
-            //        HPWH.DXCoilPLFFPLR = VariableSpeedCoils::GetVSCoilPLFFPLR(state, HPWH.DXCoilType, HPWH.DXCoilName, DXCoilErrFlag);
-            //    }
-            //    //         check the range of condenser pump power to be <= 5 gpm/ton, will be checked in the coil object
-            //}
+        //    if (HPWH.bIsIHP) {
+        //        if (!state.dataGlobal->DoingSizing) {
+        //            HPWH.Capacity = GetDWHCoilCapacityIHP(
+        //                state, HPWH.DXCoilType, HPWH.DXCoilName, IntegratedHeatPump::IHPOperationMode::SCWHMatchWHMode, DXCoilErrFlag);
+        //        }
+        //        HPWH.DXCoilAirInletNode = IntegratedHeatPump::GetCoilInletNodeIHP(state, HPWH.DXCoilType, HPWH.DXCoilName, DXCoilErrFlag);
+        //        HPWH.DXCoilPLFFPLR = GetIHPDWHCoilPLFFPLR(state, HPWH.DXCoilType, HPWH.DXCoilName, IntegratedHeatPump::IHPOperationMode::SCWHMatchWHMode, DXCoilErrFlag);
+        //    } else {
+        //        HPWH.Capacity = VariableSpeedCoils::GetCoilCapacityVariableSpeed(state, HPWH.DXCoilType, HPWH.DXCoilName, DXCoilErrFlag);
+        //        HPWH.DXCoilAirInletNode = VariableSpeedCoils::GetCoilInletNodeVariableSpeed(state, HPWH.DXCoilType, HPWH.DXCoilName, DXCoilErrFlag);
+        //        HPWH.DXCoilPLFFPLR = VariableSpeedCoils::GetVSCoilPLFFPLR(state, HPWH.DXCoilType, HPWH.DXCoilName, DXCoilErrFlag);
+        //    }
+        //    //         check the range of condenser pump power to be <= 5 gpm/ton, will be checked in the coil object
+        //}
 
-            //if (HPWH.OperatingWaterFlowRate == DataGlobalConstants::AutoCalculate) {
-            //    HPWH.OperatingWaterFlowRate = 0.00000004487 * HPWH.Capacity;
-            //    HPWH.WaterFlowRateAutoSized = true;
-            //}
+        //if (HPWH.OperatingWaterFlowRate == DataGlobalConstants::AutoCalculate) {
+        //    HPWH.OperatingWaterFlowRate = 0.00000004487 * HPWH.Capacity;
+        //    HPWH.WaterFlowRateAutoSized = true;
+        //}
 
-            //if (HPWH.OperatingAirFlowRate == DataGlobalConstants::AutoCalculate) {
-            //    HPWH.OperatingAirFlowRate = 0.00005035 * HPWH.Capacity;
-            //    HPWH.AirFlowRateAutoSized = true;
-            //}
+        //if (HPWH.OperatingAirFlowRate == DataGlobalConstants::AutoCalculate) {
+        //    HPWH.OperatingAirFlowRate = 0.00005035 * HPWH.Capacity;
+        //    HPWH.AirFlowRateAutoSized = true;
+        //}
 
         // On Cycle Parasitic Electric Load
         HPWH.OnCycParaLoad = hpwhNumeric[6 + nNumericOffset];

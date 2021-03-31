@@ -902,7 +902,7 @@ namespace WaterThermalTanks {
 
     bool GetWaterThermalTankInput(EnergyPlusData &state);
 
-    void getHPWaterHeaterCapEtc(EnergyPlusData &state, HeatPumpWaterHeaterData &HPWH, bool bIsVScoil);
+    void getHPWaterHeaterCapEtc(EnergyPlusData &state);
 
     void CalcWaterThermalTankZoneGains(EnergyPlusData &state);
 

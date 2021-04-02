@@ -1186,16 +1186,6 @@ void getHPWaterHeaterCapEtc(EnergyPlusData& state)
             }
             //         check the range of condenser pump power to be <= 5 gpm/ton, will be checked in the coil object
         }
-
-        if (HPWH.OperatingWaterFlowRate == DataGlobalConstants::AutoCalculate) {
-            HPWH.OperatingWaterFlowRate = 0.00000004487 * HPWH.Capacity;
-            HPWH.WaterFlowRateAutoSized = true;
-        }
-
-        if (HPWH.OperatingAirFlowRate == DataGlobalConstants::AutoCalculate) {
-            HPWH.OperatingAirFlowRate = 0.00005035 * HPWH.Capacity;
-            HPWH.AirFlowRateAutoSized = true;
-        }
     }
 }
 
@@ -1798,15 +1788,15 @@ bool getHPWaterHeaterInput(EnergyPlusData &state)
         //    //         check the range of condenser pump power to be <= 5 gpm/ton, will be checked in the coil object
         //}
 
-        //if (HPWH.OperatingWaterFlowRate == DataGlobalConstants::AutoCalculate) {
-        //    HPWH.OperatingWaterFlowRate = 0.00000004487 * HPWH.Capacity;
-        //    HPWH.WaterFlowRateAutoSized = true;
-        //}
+        if (HPWH.OperatingWaterFlowRate == DataGlobalConstants::AutoCalculate) {
+            HPWH.OperatingWaterFlowRate = 0.00000004487 * HPWH.Capacity;
+            HPWH.WaterFlowRateAutoSized = true;
+        }
 
-        //if (HPWH.OperatingAirFlowRate == DataGlobalConstants::AutoCalculate) {
-        //    HPWH.OperatingAirFlowRate = 0.00005035 * HPWH.Capacity;
-        //    HPWH.AirFlowRateAutoSized = true;
-        //}
+        if (HPWH.OperatingAirFlowRate == DataGlobalConstants::AutoCalculate) {
+            HPWH.OperatingAirFlowRate = 0.00005035 * HPWH.Capacity;
+            HPWH.AirFlowRateAutoSized = true;
+        }
 
         // On Cycle Parasitic Electric Load
         HPWH.OnCycParaLoad = hpwhNumeric[6 + nNumericOffset];

@@ -555,8 +555,15 @@ void SimHeatPumpWaterHeater(EnergyPlusData &state,
     // Plant connected HPWHs are called by PlantLoopEquipments (but only those on supply side ).
     // HPWH will not be included in sizing calculations, fan is initialized only during BeginEnvrnFlag (FALSE during sizing)
     // (fan will be turned off during Standard Ratings procedure yielding incorrect results)
-    if (state.dataGlobal->DoingSizing) return;
-
+    if (state.dataGlobal->DoingSizing) {
+        if (state.dataWaterThermalTanks->getWaterHPWaterHeaterCapEtcFlag) {
+            // the following loop can be blended into the getHPWaterHeatSizeCapEtc() function
+            // --may do it in the next step
+            getHPWaterHeaterCapEtc(state);
+            state.dataWaterThermalTanks->getWaterHPWaterHeaterCapEtcFlag = false;
+        }
+        return;
+    }
     // For HPWHs, StandAlone means not connected to a plant loop (use nodes are not used, source nodes are connected to a HPWH)
     if (state.dataWaterThermalTanks->HPWaterHeater(HeatPumpNum).StandAlone) {
         bool LocalRunFlag = true;
@@ -594,12 +601,6 @@ void CalcWaterThermalTankZoneGains(EnergyPlusData &state)
     if (state.dataWaterThermalTanks->numWaterThermalTank == 0) {
 
         if (!state.dataGlobal->DoingSizing) {
-            if (state.dataWaterThermalTanks->getWaterHPWaterHeaterCapEtcFlag) {
-                // the following loop can be blended into the getHPWaterHeatSizeCapEtc() function
-                // --may do it in the next step
-                getHPWaterHeaterCapEtc(state);
-                state.dataWaterThermalTanks->getWaterHPWaterHeaterCapEtcFlag = false;
-            }
             return;
         } else {
             if (state.dataWaterThermalTanks->getWaterThermalTankInputFlag) {

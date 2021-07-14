@@ -250,6 +250,8 @@ A potential proposal is like this:
         int OutletNodeNum;
         std::string OutletNodeName;
         std::vector<std::string> InletNodeName;
+		std::vector<int> InlteFractionScheduleIndex;
+		std::vecotr<Real64> InletDesignFlowRate;
         std::vector<int> InletNodeNum;
         Real64 OutletTemp;
 		Real64 OutletHumRat;
@@ -265,7 +267,7 @@ A potential proposal is like this:
         void CalcAirLoopExhaustMixer(EnergyPlusData &state);
     };
 
-The proposed code is simlar to the current AirLoopHVAC:Mixer. An additional member--Real64 OutletHumRat--is added to the struct, in that this could be important information for energy and mass balance, and also for potential total heat (enthalpy) recovery procedures.
+The proposed code is simlar to the current AirLoopHVAC:Mixer. Two additional vector element will be added to accomondate the inlet fraction schedule index and the inlet design flow rate need for AirLoopHVAC:ExhaustMixer. Further, another another additional member--Real64 OutletHumRat--is added to the struct, in that this could be important information for energy and mass balance, and also for potential total heat (enthalpy) recovery procedures.
 
 ### factory method ###
 
@@ -321,7 +323,7 @@ The new outputs to be added will be the exhaust fan related energy.
 
 <TBD>
 
-### IDD Addition for AirLoopHVAC:ExhaustSystem ###
+### AirLoopHVAC:ExhaustSystem Input Fields ###
 
 The AirLoopHVAC:Exhaust system has the following input fields: 
 
@@ -361,7 +363,7 @@ AirLoopHVAC:ExhaustSystem,
 	   \type object-list
 	   \object-list FansZoneExhaust
 	   
-### IDD Addition for AirLooopHVAC:ExhaustMixer ###
+### AirLooopHVAC:ExhaustMixer Input fields ###
 
 The AirLoopHVAC:ExhaustMixer block will have the following input fields: 
 
@@ -414,90 +416,7 @@ AirLoopHVAC:ExhaustMixer,
        \note Flow fraction schedule name for this Inlet. Schedule value is in range [0,1].
        \type object-list
        \object-list ScheduleNames
-  A9 , \field Inlet 4 Node Name
-       \begin-extensible
-       \required-field
-       \type node
-  N4 , \field Inlet 4 Design Flow Rate {m3/s}
-	   \units m3/s
-       \autosizable
-       \default autosize
-  A10, \field Inlet 4 Flow Fraction Schedule Name
-       \note Flow fraction schedule name for this Inlet. Schedule value is in range [0,1].
-       \type object-list
-       \object-list ScheduleNames
-  A11, \field Inlet 5 Node Name
-       \begin-extensible
-       \required-field
-       \type node
-  N5 , \field Inlet 5 Design Flow Rate {m3/s}
-	   \units m3/s
-       \autosizable
-       \default autosize
-  A12, \field Inlet 5 Flow Fraction Schedule Name
-       \note Flow fraction schedule name for this Inlet. Schedule value is in range [0,1].
-       \type object-list
-       \object-list ScheduleNames
-  A13, \field Inlet 6 Node Name
-       \begin-extensible
-       \required-field
-       \type node
-  N6 , \field Inlet 6 Design Flow Rate {m3/s}
-	   \units m3/s
-       \autosizable
-       \default autosize
-  A14, \field Inlet 6 Flow Fraction Schedule Name
-       \note Flow fraction schedule name for this Inlet. Schedule value is in range [0,1].
-       \type object-list
-       \object-list ScheduleNames
-  A15, \field Inlet 7 Node Name
-       \begin-extensible
-       \required-field
-       \type node
-  N7 , \field Inlet 7 Design Flow Rate {m3/s}
-	   \units m3/s
-       \autosizable
-       \default autosize
-  A16, \field Inlet 7 Flow Fraction Schedule Name
-       \note Flow fraction schedule name for this Inlet. Schedule value is in range [0,1].
-       \type object-list
-       \object-list ScheduleNames
-  A17, \field Inlet 8 Node Name
-       \begin-extensible
-       \required-field
-       \type node
-  N8 , \field Inlet 8 Design Flow Rate {m3/s}
-	   \units m3/s
-       \autosizable
-       \default autosize
-  A18, \field Inlet 8 Flow Fraction Schedule Name
-       \note Flow fraction schedule name for this Inlet. Schedule value is in range [0,1].
-       \type object-list
-       \object-list ScheduleNames
-  A19, \field Inlet 9 Node Name
-       \begin-extensible
-       \required-field
-       \type node
-  N9 , \field Inlet 9 Design Flow Rate {m3/s}
-	   \units m3/s
-       \autosizable
-       \default autosize
-  A20, \field Inlet 9 Flow Fraction Schedule Name
-       \note Flow fraction schedule name for this Inlet. Schedule value is in range [0,1].
-       \type object-list
-       \object-list ScheduleNames
-  A21, \field Inlet 10 Node Name
-       \begin-extensible
-       \required-field
-       \type node
-  N10, \field Inlet 10 Design Flow Rate {m3/s}
-	   \units m3/s
-       \autosizable
-       \default autosize
-  A22; \field Inlet 10 Flow Fraction Schedule Name
-       \note Flow fraction schedule name for this Inlet. Schedule value is in range [0,1].
-       \type object-list
-       \object-list ScheduleNames 
+...
 
 ## Outputs Description ##
 

@@ -4,10 +4,10 @@ Delicated Exhaust Fans for General Exhaust
 **J. Yuan & M.J. Witte, GARD**
 
  - Original Date: July 13, 2021
- 
+
 ## Justification for New Feature ##
 
-This new feature provides a convenient way for multiple exhausts in different AirLoops to be combined to a central exhaust system. The need for this proposed feature stems from the practice of modeling general exhaust with a central exhaust duct. Currently this type of configuration requires workarounds in EnergyPlus and it is fairly tedious to accomplish on large projects. As a result, during a compliance review (e.g. CA Title-24, pp. 257, 2019 version), there are frequent complains about missing “exhaust fans” in the energy report. It is benificial to have easier ways to model a dedicated general exhaust stream, which would allow more accurate part loads reporting on the exhaust fans, thus facilitaing code compliance reviews. 
+This new feature provides a convenient way for multiple exhausts in different AirLoops to be combined to a central exhaust system. The need for this proposed feature stems from the practice of modeling general exhaust with a central exhaust duct. Currently this type of configuration requires workarounds in EnergyPlus and it is fairly tedious to accomplish on large projects. As a result, during a compliance review (e.g. CA Title-24, pp. 257, 2019 version), there are frequent complains about missing “exhaust fans” in the energy report. It is benificial to have easier ways to model a dedicated general exhaust stream, which would allow more accurate part loads reporting on the exhaust fans, thus facilitaing code compliance reviews.
 
 ## E-mail and Conference Call Conclusions ##
 
@@ -24,14 +24,14 @@ This work will implement code changes that will allow a more convenient approach
 The following new objects will be added to allow an AirLoopHVAC:ExhaustSystem to be described: 
 ```
 AirLoopHVAC:ExhaustSystem,
-	Central Exhaust,			!- Name
-	Exhaust Avail List,			!- Availability Manager List Name
-	Fan:SystemModel,			!- Component 1 Object Type
-	Central Exhaust Fan,		!- Component 1 Name
-	AirLoopHVAC:ExhaustMixer,	!- Component 2 Object Type
-	Exhaust Mixer 1,			!- Component 2 Name
-	Fan:ZoneExhaust,			!- Component 3 Object Type
-	Zone1 Exhaust Fan;			!- Component 3 Name
+    Central Exhaust,            !- Name
+    Exhaust Avail List,         !- Availability Manager List Name
+    Fan:SystemModel,            !- Component 1 Object Type
+    Central Exhaust Fan,        !- Component 1 Name
+    AirLoopHVAC:ExhaustMixer,   !- Component 2 Object Type
+    Exhaust Mixer 1,            !- Component 2 Name
+    Fan:ZoneExhaust,            !- Component 3 Object Type
+    Zone1 Exhaust Fan;          !- Component 3 Name
 ```
 
 The fan model allowed in modeling this object needs to be either FAN:SYSTEMMODEL or FAN:COMPONENTMODEL. The Fan:ConstantVolume or Fan:VariableVolume models could not be used with the current object. 
@@ -39,14 +39,14 @@ The fan model allowed in modeling this object needs to be either FAN:SYSTEMMODEL
 The AirLoopHVAC:ExahaustMixer is also to be added as a new object: 
 ```
 AirLoopHVAC:ExhaustMixer,
-	Exhaust Mixer 1,				!-Name
-	Central Exhaust Fan Inlet Node,	!- Outlet Node Name
-	Zone2 Exhaust Node,				!- Inlet 1 Node Name
-	0.1,							!- Inlet 1 Design Flow Rate {m3/s}
-	Zone2 Exhaust Flow Schedule,	!- Inlet 1 Flow Fraction Schedule Name
-	Zone1 Exhaust Fan Outlet Node,	!- Inlet 2 Node Name
-	,								!- Inlet 2 Design Flow Rate {m3/s}
-	;								!- Inlet 2 Flow Fraction Schedule Name
+    Exhaust Mixer 1,                !-Name
+    Central Exhaust Fan Inlet Node, !- Outlet Node Name
+    Zone2 Exhaust Node,             !- Inlet 1 Node Name
+    0.1,                            !- Inlet 1 Design Flow Rate {m3/s}
+    Zone2 Exhaust Flow Schedule,    !- Inlet 1 Flow Fraction Schedule Name
+    Zone1 Exhaust Fan Outlet Node,  !- Inlet 2 Node Name
+    ,                               !- Inlet 2 Design Flow Rate {m3/s}
+    ;                               !- Inlet 2 Flow Fraction Schedule Name
 ```
 
 In the example above, the Inlet 2 Design Flow Rate (m3/s) might not be needed as it is an existing zone exhaust fan. The set up tries to allow some flexiblities in the configurations in that one or more of the connect branch to the mixer can be without a branch fan. Further, the exhaust mixer will allow more than 2 inlet branches to be connected to the mixer. 
@@ -66,34 +66,34 @@ AirLoopHVAC:ExhaustSystem,
        \required-field
   A2 , \field Availability Schedule Name
        \note Availability schedule name for this exhaust system. Schedule value > 0 means it is available.
-       \note If this field is blank, the exhaust system is always available.	  
+       \note If this field is blank, the exhaust system is always available.      
        \type object-list
        \object-list ScheduleNames
   A3 , \field Component 1 Object Type
        \begin-extensible  
        \required-field
-	   \type choice
-	   \key Fan:SystemModel
-	   \key Fan:ComponentModel
-	   \key AirLoopHVAC:ExhaustMixer
+       \type choice
+       \key Fan:SystemModel
+       \key Fan:ComponentModel
+       \key AirLoopHVAC:ExhaustMixer
   A4 , \field Component 1 Name
        \required-field
-	   \type object-list
-	   \object-list FansSystemModel
-	   \object-list FansComponentModel
-	   \object-list AirLoopHVACExhaustMixerNames
+       \type object-list
+       \object-list FansSystemModel
+       \object-list FansComponentModel
+       \object-list AirLoopHVACExhaustMixerNames
   A5 , \field Component 2 Object Type
-	   \type choice
-	   \key AirLoopHVAC:ExhaustMixer
+       \type choice
+       \key AirLoopHVAC:ExhaustMixer
   A4 , \field Component 2 Name
-	   \type object-list
-	   \object-list AirLoopHVACExhaustMixerNames
+       \type object-list
+       \object-list AirLoopHVACExhaustMixerNames
   A5 , \field Component 3 Object Type
-	   \type choice
-	   \key Fan:ZoneExhaust
+       \type choice
+       \key Fan:ZoneExhaust
   A6;  \field Component 3 Name
-	   \type object-list
-	   \object-list FansZoneExhaust
+       \type object-list
+       \object-list FansZoneExhaust
 ```
    
 ### IDD Addition for AirLooopHVAC:ExhaustMixer ###
@@ -118,7 +118,7 @@ AirLoopHVAC:ExhaustMixer,
        \type node
   N1 , \field Inlet 1 Design Flow Rate {m3/s}
        \required-field
-	   \units m3/s
+       \units m3/s
        \autosizable
        \default autosize
   A4 , \field Inlet 1 Flow Fraction Schedule Name
@@ -130,7 +130,7 @@ AirLoopHVAC:ExhaustMixer,
        \required-field
        \type node
   N2 , \field Inlet 2 Design Flow Rate {m3/s}
-	   \units m3/s
+       \units m3/s
        \autosizable
        \default autosize
   A6 , \field Inlet 2 Flow Fraction Schedule Name
@@ -142,7 +142,7 @@ AirLoopHVAC:ExhaustMixer,
        \required-field
        \type node
   N3 , \field Inlet 3 Design Flow Rate {m3/s}
-	   \units m3/s
+       \units m3/s
        \autosizable
        \default autosize
   A8 , \field Inlet 3 Flow Fraction Schedule Name
@@ -154,7 +154,7 @@ AirLoopHVAC:ExhaustMixer,
        \required-field
        \type node
   N4 , \field Inlet 4 Design Flow Rate {m3/s}
-	   \units m3/s
+       \units m3/s
        \autosizable
        \default autosize
   A10, \field Inlet 4 Flow Fraction Schedule Name
@@ -166,7 +166,7 @@ AirLoopHVAC:ExhaustMixer,
        \required-field
        \type node
   N5 , \field Inlet 5 Design Flow Rate {m3/s}
-	   \units m3/s
+       \units m3/s
        \autosizable
        \default autosize
   A12, \field Inlet 5 Flow Fraction Schedule Name
@@ -178,7 +178,7 @@ AirLoopHVAC:ExhaustMixer,
        \required-field
        \type node
   N6 , \field Inlet 6 Design Flow Rate {m3/s}
-	   \units m3/s
+       \units m3/s
        \autosizable
        \default autosize
   A14, \field Inlet 6 Flow Fraction Schedule Name
@@ -190,7 +190,7 @@ AirLoopHVAC:ExhaustMixer,
        \required-field
        \type node
   N7 , \field Inlet 7 Design Flow Rate {m3/s}
-	   \units m3/s
+       \units m3/s
        \autosizable
        \default autosize
   A16, \field Inlet 7 Flow Fraction Schedule Name
@@ -202,7 +202,7 @@ AirLoopHVAC:ExhaustMixer,
        \required-field
        \type node
   N8 , \field Inlet 8 Design Flow Rate {m3/s}
-	   \units m3/s
+       \units m3/s
        \autosizable
        \default autosize
   A18, \field Inlet 8 Flow Fraction Schedule Name
@@ -214,7 +214,7 @@ AirLoopHVAC:ExhaustMixer,
        \required-field
        \type node
   N9 , \field Inlet 9 Design Flow Rate {m3/s}
-	   \units m3/s
+       \units m3/s
        \autosizable
        \default autosize
   A20, \field Inlet 9 Flow Fraction Schedule Name
@@ -226,7 +226,7 @@ AirLoopHVAC:ExhaustMixer,
        \required-field
        \type node
   N10, \field Inlet 10 Design Flow Rate {m3/s}
-	   \units m3/s
+       \units m3/s
        \autosizable
        \default autosize
   A22; \field Inlet 10 Flow Fraction Schedule Name
@@ -267,36 +267,36 @@ AirLoopHVAC:ExhaustSystem,
        \required-field
   A2 , \field Availability Schedule Name
        \note Availability schedule name for this exhaust system. Schedule value > 0 means it is available.
-       \note If this field is blank, the exhaust system is always available.	  
+       \note If this field is blank, the exhaust system is always available.      
        \type object-list
        \object-list ScheduleNames
   A3 , \field Component 1 Object Type
        \begin-extensible  
        \required-field
-	   \type choice
-	   \key Fan:SystemModel
-	   \key Fan:ComponentModel
-	   \key AirLoopHVAC:ExhaustMixer
+       \type choice
+       \key Fan:SystemModel
+       \key Fan:ComponentModel
+       \key AirLoopHVAC:ExhaustMixer
   A4 , \field Component 1 Name
        \required-field
-	   \type object-list
-	   \object-list FansSystemModel
-	   \object-list FansComponentModel
-	   \object-list AirLoopHVACExhaustMixerNames
+       \type object-list
+       \object-list FansSystemModel
+       \object-list FansComponentModel
+       \object-list AirLoopHVACExhaustMixerNames
   A5 , \field Component 2 Object Type
-	   \type choice
-	   \key AirLoopHVAC:ExhaustMixer
+       \type choice
+       \key AirLoopHVAC:ExhaustMixer
   A4 , \field Component 2 Name
-	   \type object-list
-	   \object-list AirLoopHVACExhaustMixerNames
+       \type object-list
+       \object-list AirLoopHVACExhaustMixerNames
   A5 , \field Component 3 Object Type
-	   \type choice
-	   \key Fan:ZoneExhaust
+       \type choice
+       \key Fan:ZoneExhaust
   A6;  \field Component 3 Name
-	   \type object-list
-	   \object-list FansZoneExhaust
+       \type object-list
+       \object-list FansZoneExhaust
 ```
-	   
+       
 ### AirLooopHVAC:ExhaustMixer Input fields ###
 
 The AirLoopHVAC:ExhaustMixer block will have the following input fields: 
@@ -319,7 +319,7 @@ AirLoopHVAC:ExhaustMixer,
        \type node
   N1 , \field Inlet 1 Design Flow Rate {m3/s}
        \required-field
-	   \units m3/s
+       \units m3/s
        \autosizable
        \default autosize
   A4 , \field Inlet 1 Flow Fraction Schedule Name
@@ -331,7 +331,7 @@ AirLoopHVAC:ExhaustMixer,
        \required-field
        \type node
   N2 , \field Inlet 2 Design Flow Rate {m3/s}
-	   \units m3/s
+       \units m3/s
        \autosizable
        \default autosize
   A6 , \field Inlet 2 Flow Fraction Schedule Name
@@ -343,7 +343,7 @@ AirLoopHVAC:ExhaustMixer,
        \required-field
        \type node
   N3 , \field Inlet 3 Design Flow Rate {m3/s}
-	   \units m3/s
+       \units m3/s
        \autosizable
        \default autosize
   A8 , \field Inlet 3 Flow Fraction Schedule Name
@@ -396,11 +396,11 @@ A potential proposal is like this:
         int OutletNodeNum;
         std::string OutletNodeName;
         std::vector<std::string> InletNodeName;
-		std::vector<int> InlteFractionScheduleIndex;
-		std::vecotr<Real64> InletDesignFlowRate;
+        std::vector<int> InlteFractionScheduleIndex;
+        std::vecotr<Real64> InletDesignFlowRate;
         std::vector<int> InletNodeNum;
         Real64 OutletTemp;
-		Real64 OutletHumRat;
+        Real64 OutletHumRat;
 
         // default constructor
         AirLoopExhaustMixer() : numOfInletNodes(0), m_AirLoopMixer_Num(0), OutletNodeNum(0), OutletTemp(0.0), OutletHumRat(0.0)

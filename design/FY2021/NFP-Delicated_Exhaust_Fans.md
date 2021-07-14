@@ -15,14 +15,13 @@ This new feature provides a convenient way for multiple exhausts in different Ai
 
 ## Overview ##
 
-This work will implement code changes that will allow a more convenient approach to allow exhaust streams from multiple airloops to be re-routed and recombined to one or more general central exhaust systems. A typical example is the dedicated airflow supplied to multiple offices and laboratories spaces and then required different heat recovery processes for the office spaces exhausts and the lab spaces exhausts. The configuration of the example can be shown in the figure as follows: 
+This work will implement code changes that will allow a more convenient approach to allow exhaust streams from multiple airloops to be re-routed and recombined to one or more general central exhaust systems. A typical example is the dedicated airflow supplied to multiple offices and laboratories spaces and then required different heat recovery processes for the office spaces exhausts and the lab spaces exhausts. The configuration of the example can be shown in the following figure: 
 
 ![Exhaust System Configuration](Dedicated_Airstream.png)
 
 ## Approach ##
 
 The following new objects will be added to allow an AirLoopHVAC:ExhaustSystem to be described: 
-
 ```
 AirLoopHVAC:ExhaustSystem,
 	Central Exhaust,			!- Name
@@ -38,7 +37,6 @@ AirLoopHVAC:ExhaustSystem,
 The fan model allowed in modeling this object needs to be either FAN:SYSTEMMODEL or FAN:COMPONENTMODEL. The Fan:ConstantVolume or Fan:VariableVolume models could not be used with the current object. 
 
 The AirLoopHVAC:ExahaustMixer is also to be added as a new object: 
-
 ```
 AirLoopHVAC:ExhaustMixer,
 	Exhaust Mixer 1,				!-Name
@@ -60,7 +58,6 @@ The following IDD blocks will be added to the Energy+.idd file.
 ### IDD Addition for AirLoopHVAC:ExhaustSystem ###
 
 After the AirLoopHVAC:ReturnPath block and before the AirLoopHVAC:ExhaustMixer (to be added) blocks: 
-
 ```
 AirLoopHVAC:ExhaustSystem,
        \memo Define dedicated exhaust systems that 
@@ -102,7 +99,6 @@ AirLoopHVAC:ExhaustSystem,
 ### IDD Addition for AirLooopHVAC:ExhaustMixer ###
 
 After the AirLoopHVAC:ReturnPath block and the AirLoopHVAC:DedicatedOutdoorAirSystem blocks: 
-
 ```
 AirLoopHVAC:ExhaustMixer,
        \extensible:3 - Just duplicate last three fields and comments (changing numbering, please)
@@ -250,7 +246,6 @@ One new example file will be added to the test suite to demonstrate how to use t
 
 Since the feature addes compeletely new blocks, a transition program is not needed for converting the past versions. 
 
-
 ## Input Output Reference Documentation ##
 
 The proposed new feature requires adding the following blocks to the IDD file:
@@ -259,12 +254,11 @@ The new outputs to be added will be the exhaust fan related energy.
 
 ### Input Description ###
 
-<TBD>
+TBD.
 
 ### AirLoopHVAC:ExhaustSystem Input Fields ###
 
 The AirLoopHVAC:Exhaust system has the following input fields: 
-
 ```
 AirLoopHVAC:ExhaustSystem,
        \memo Define dedicated exhaust systems that 
@@ -306,7 +300,6 @@ AirLoopHVAC:ExhaustSystem,
 ### AirLooopHVAC:ExhaustMixer Input fields ###
 
 The AirLoopHVAC:ExhaustMixer block will have the following input fields: 
-
 ```
 AirLoopHVAC:ExhaustMixer,
        \extensible:3 - Just duplicate last three fields and comments (changing numbering, please)
@@ -362,7 +355,7 @@ AirLoopHVAC:ExhaustMixer,
 
 ## Outputs Description ##
 
-<TBD: one consideration here is to determine whether the existing outputs are enough (e.g. from a fan's output variables), or a new "Exhaust Fan" related output variable set is need?> 
+TBD: One of the considerations here is to determine whether the existing outputs are enough (e.g. from a fan's output variables), or a new "Exhaust Fan" related output variable set is need? 
 
 ```
 Central Exhaust Fan Energy [J]
@@ -393,7 +386,6 @@ Create a new data struct for the AirLoopHVAC:ExhaustSystem object.
 Create a new data struct for the AirLoopHVAC:ExhaustMixer object. This could be simlar to AirLoopHVAC:Mixer or AirLoopHVAC:ZoneMier object. 
 
 A potential proposal is like this: 
-
 ```
     struct AirLoopExhaustMixer
     {
@@ -446,11 +438,11 @@ Process the AirLoopHVAC:ExhaustMixer inputs. Code TBD.
 
 ### HeatBalance Manager ###
 
-<TBD>
+TBD.
 
 ### Controls ###
 
-<TBD>
+TBD.
 
 ### Sizing ###
 

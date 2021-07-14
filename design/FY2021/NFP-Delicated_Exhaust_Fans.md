@@ -15,7 +15,9 @@ This new feature provides a convenient way for multiple exhausts in different Ai
 
 ## Overview ##
 
-This work will implement code changes that will allow a more convenient approach to allow exhaust streams from multiple airloops to be re-routed and recombined to one or more general central exhaust systems. A typical example is the dedicated airflow supplied to multiple offices and laboratories spaces and then required different heat recovery processes for the office spaces exhausts and the lab spaces exhausts. 
+This work will implement code changes that will allow a more convenient approach to allow exhaust streams from multiple airloops to be re-routed and recombined to one or more general central exhaust systems. A typical example is the dedicated airflow supplied to multiple offices and laboratories spaces and then required different heat recovery processes for the office spaces exhausts and the lab spaces exhausts. The configuration of the example can be shown in the figure as follows: 
+
+![Exhaust System Configuration](Dedicated_Airstream.png)
 
 ## Approach ##
 

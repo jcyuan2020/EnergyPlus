@@ -877,7 +877,7 @@ void InstantiateInitializeFMUImport(EnergyPlusData &state)
     for (i = 1; i <= state.dataExternalInterface->NumFMUObjects; ++i) {
         for (j = 1; j <= state.dataExternalInterface->FMU(i).NumInstances; ++j) {
             state.dataExternalInterface->FMU(i).Instance(j).fmicomponent =
-                fmiEPlusInstantiateSlave((char *)state.dataExternalInterface->FMU(i).Instance(j).WorkingFolder.c_str(),
+                fmiEPlusInstantiateSlave((char *)state.dataExternalInterface->FMU(i).Instance(j).WorkingFolder.string().c_str(),
                                          &state.dataExternalInterface->FMU(i).Instance(j).LenWorkingFolder,
                                          &state.dataExternalInterface->FMU(i).TimeOut,
                                          &state.dataExternalInterface->FMU(i).Visible,

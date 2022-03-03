@@ -453,7 +453,8 @@ namespace ScheduleManager {
                                                                      lAlphaBlanks,
                                                                      cAlphaFields,
                                                                      cNumericFields);
-            std::string ShadingSunlitFracFileName = Alphas(1);
+            // std::string ShadingSunlitFracFileName = Alphas(1);
+            std::filesystem::path ShadingSunlitFracFileName = Alphas(1);
 
             std::string contextString = CurrentModuleObject + ", " + cAlphaFields(1) + ": ";
             state.files.TempFullFilePath.filePath = CheckForActualFilePath(state, ShadingSunlitFracFileName, contextString);
@@ -1673,7 +1674,10 @@ namespace ScheduleManager {
 
             std::string contextString = CurrentModuleObject + "=\"" + Alphas(1) + "\", " + cAlphaFields(3) + ": ";
 
-            state.files.TempFullFilePath.filePath = CheckForActualFilePath(state, Alphas(3), contextString);
+            std::filesystem::path alphas3_path = Alphas(3);
+            // state.files.TempFullFilePath.filePath = CheckForActualFilePath(state, Alphas(3), contextString);
+            state.files.TempFullFilePath.filePath = CheckForActualFilePath(state, alphas3_path, contextString);
+
             // Setup file reading parameters
             if (state.files.TempFullFilePath.filePath.empty()) {
                 ErrorsFound = true;
